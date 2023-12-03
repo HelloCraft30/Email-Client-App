@@ -12,18 +12,18 @@ private:
 	std::string localUser;
 	SOCKET smtpSock;
 	SOCKET pop3Sock;
-	void connectSmtp();
-	void connectPop3();
+	bool connectSmtp();
+	bool connectPop3();
 	void disconnect(SOCKET& socket);
 	bool makeSpace();
 	std::vector<MAILFOLDER> folders;
-
 public:
+	bool checkConnection();
 	std::string getUser();
 	MAILCLIENT(std::string IP, int smtp, int pop3);
 
 	void sendMail(const EMAIL& mail);
-	void dataUpdate();
+	void updateInboxMail();
 	void readMail(); 
 
 	int viewFunction();

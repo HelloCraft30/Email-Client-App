@@ -1,18 +1,17 @@
 #include<iostream>
 #include "MAILCLIENT.h"
 
-using namespace std;
-
 int main() {
 	// Initialize Winsock
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-		cout << "Failed to initialize Winsock.\n";
+		std::cout << "Failed to initialize Winsock.\n";
 		return -1;
 	}
 
 	//mail client [IP, SMTP port, POP3 port]
 	MAILCLIENT client("127.0.0.1", 2225, 3335);
+	client.checkConnection();
 
 	while (true) {
 		switch (client.viewFunction()) {
@@ -25,13 +24,11 @@ int main() {
 			client.readMail();
 		} break;
 		case 3: {
-			client.dataUpdate();
-
+			client.updateInboxMail();
 		}break;
 		}
 	}
 
-	system("pause");
 	WSACleanup();
 	return 0;
 }

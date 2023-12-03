@@ -5,6 +5,8 @@
 #include<iostream>
 #include<fstream>
 #include<map>
+#include <thread>
+#include <chrono>
 #include <direct.h>
 
 struct Attachment {

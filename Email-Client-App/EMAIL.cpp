@@ -196,6 +196,7 @@ void EMAIL::inputF(const std::string& file) {
 	while (std::getline(fileOpen, temp)) {
 		attachFiles.push_back(Attachment{ "N/A", temp });
 	}
+	fileOpen.close();
 }
 
 void EMAIL::outputF(const std::string& file) {

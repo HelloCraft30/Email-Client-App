@@ -41,30 +41,49 @@ MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 	}
 }
 
-void MAILCLIENT::connectSmtp() {
+bool MAILCLIENT::connectSmtp() {
+	closesocket(smtpSock);
+	smtpSock = socket(AF_INET, SOCK_STREAM, 0);
 	sockaddr_in serverAddress;
 	serverAddress.sin_family = AF_INET;
 	serverAddress.sin_port = htons(SMTPp);
 	serverAddress.sin_addr.s_addr = inet_addr(hostIP.c_str());
 
-	connect(smtpSock, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
+	if (connect(smtpSock, (struct sockaddr*)&serverAddress, sizeof(serverAddress))) {
+		std::cout << "Failed to connect to SMTP protocol\n";
+		return false;
+	};
 	char removeFirstLine[20]{};
 	recv(smtpSock, removeFirstLine, 20, 0);
+	return true;
 }
 
-void MAILCLIENT::connectPop3() {
+bool MAILCLIENT::connectPop3() {
+	closesocket(pop3Sock);
+	pop3Sock = socket(AF_INET, SOCK_STREAM, 0);
 	sockaddr_in serverAddress;
 	serverAddress.sin_family = AF_INET;
 	serverAddress.sin_port = htons(POP3p);
 	serverAddress.sin_addr.s_addr = inet_addr(hostIP.c_str());
 
-	connect(pop3Sock, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
+	if (connect(pop3Sock, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
+		std::cout << "Failed to connect to POP3 protocol\n";
+		return false;
+	};
 	char removeFirstLine[20]{};
 	recv(pop3Sock, removeFirstLine, 20, 0);
+	return true;
 }
 
 void MAILCLIENT::disconnect(SOCKET& socket) {
 	send(socket, "QUIT\r\n", sizeof("QUIT\r\n") - 1, 0);
+}
+
+bool MAILCLIENT::checkConnection() {
+	if (connectSmtp() == false) exit(-1);
+	disconnect(smtpSock);
+	if (connectPop3() == false) exit(-1);
+	disconnect(pop3Sock);
 }
 
 bool createFolder(const char* str) {
@@ -139,7 +158,7 @@ void MAILCLIENT::sendMail(const EMAIL& mail) {
 	for (const auto& x : mail.recvCC) {
 		buffer += x + ", ";
 	}
-	if(buffer!="CC: ") buffer.pop_back();
+	if (buffer != "CC: ") buffer.pop_back();
 	buffer.pop_back();
 	buffer += "\n";
 	send(smtpSock, buffer.c_str(), buffer.size(), 0);
@@ -200,14 +219,14 @@ std::string _getline(SOCKET& socket, char sp = '\n') {
 	char chr = ' ';
 	recv(socket, &chr, 1, 0);
 	while (chr != sp) {
-		if(chr!='\r') result.push_back(chr);
+		if (chr != '\r') result.push_back(chr);
 		recv(socket, &chr, 1, 0);
 	}
 	result.push_back('\0');
 	return result;
 }
 
-void MAILCLIENT::dataUpdate() {
+void MAILCLIENT::updateInboxMail() {
 	//connect to pop3
 	connectPop3();
 	//remove test mail server text
@@ -254,7 +273,7 @@ void MAILCLIENT::dataUpdate() {
 
 	std::fstream __setMail(_path_count.c_str(), std::ios::out | std::ios::trunc);
 	__setMail << _nMail; __setMail.close();
-	
+
 	for (int im = nMail + 1; im <= _nMail; im++) {
 		//get content
 		SEND = "RETR " + std::to_string(im) + "\r\n";
@@ -282,7 +301,7 @@ void MAILCLIENT::dataUpdate() {
 			_line.pop_back();
 			if (_line.size() == 0) {
 				_line = _getline(pop3Sock);
-				if (_line.find("--END")!=-1) break;
+				if (_line.find("--END") != -1) break;
 				else {
 					std::string nameF; int number = 0;
 					extractNameAndNumber(_line, nameF, number);
@@ -313,40 +332,45 @@ void MAILCLIENT::dataUpdate() {
 		mail.outputF(_mailContent);
 		folders[0].addMail(mail);
 	}
-
-	system("pause");
 	disconnect(pop3Sock);
 }
 
 void MAILCLIENT::readMail() {
 	std::cout << "This is list of folders in your mailbox:\n";
 	for (int i = 0; i < folders.size(); i++) {
-		std::cout << i+1 << ". " << folders[i].name << '\n';
+		std::cout << i + 1 << ". " << folders[i].name << '\n';
 	}
 
 	int iFolder = 0;
 	std::cout << "Which folder do you want to read: ";
 	std::cin >> iFolder;
-	if (folders[iFolder-1].mails.size() == 0) {
+	while (iFolder <= 0 || iFolder > folders.size()) {
+		std::cout << "Invalid input. Again: ";
+		std::cin >> iFolder;
+	}
+	if (folders[iFolder - 1].mails.size() == 0) {
 		std::cout << "Empty.\n";
 	}
 	else {
-		std::cout << "This is list of mails in " << folders[iFolder-1].name << " folder:\n";
+		std::cout << "This is list of mails in " << folders[iFolder - 1].name << " folder:\n";
 
-		int n = folders[iFolder-1].mails.size();
+		int n = folders[iFolder - 1].mails.size();
 		for (int i = 1; i <= n; i++) {
-			
-			folders[iFolder-1].mails[i - 1].subShow(i);
+
+			folders[iFolder - 1].mails[i - 1].subShow(i);
 		}
 		int iEmail = 0;
 		std::cout << "Which email do you want to read: ";
 		std::cin >> iEmail;
-
+		while (iEmail <= 0 || iEmail > n) {
+			std::cout << "Invalid input. Again: ";
+			std::cin >> iEmail;
+		}
 		folders[iFolder - 1].mails[iEmail - 1].isRead = 1;
 		folders[iFolder - 1].mails[iEmail - 1].show();
 		folders[iFolder - 1].saveLocal(localUser);
 	}
-	
+
 
 	system("pause");
 }
