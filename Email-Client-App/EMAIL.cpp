@@ -162,7 +162,6 @@ std::streampos getFileSize(const std::string& filePath) {
 }
 
 void EMAIL::inputF(const std::string& file) {
-
 	std::fstream fileOpen(file.c_str(), std::ios::in);
 	fileOpen >> isRead;
 	fileOpen.ignore();
