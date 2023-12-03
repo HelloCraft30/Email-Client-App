@@ -58,7 +58,8 @@ void EMAIL::show() {
 
 void EMAIL::subShow(int i) {
 	std::cout << i << ". ";
-	if (isRead == false) std::cout << "<New> ";
+	if (isRead == false) std::cout << "<UNREAD> ";
+	else std::cout << "         ";
 	std::cout << "<" << sender << "> <" << subject << ">\n";
 }
 

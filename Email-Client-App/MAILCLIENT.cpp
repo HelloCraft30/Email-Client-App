@@ -341,7 +341,10 @@ void MAILCLIENT::readMail() {
 		int iEmail = 0;
 		std::cout << "Which email do you want to read: ";
 		std::cin >> iEmail;
+
+		folders[iFolder - 1].mails[iEmail - 1].isRead = 1;
 		folders[iFolder - 1].mails[iEmail - 1].show();
+		folders[iFolder - 1].saveLocal(localUser);
 	}
 	
 

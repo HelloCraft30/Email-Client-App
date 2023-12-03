@@ -23,3 +23,11 @@ bool MAILFOLDER::makeSpace(const std::string& user) {
 	createFile.close();
 	return true;
 }
+
+void MAILFOLDER::saveLocal(const std::string& user) {
+	int n = mails.size();
+	for (int i = 0; i < n; i++) {
+		std::string _path = "Mail_client\\" + user + "\\" + name + "\\mail_" + std::to_string(i+1) + "\\content.txt";
+		mails[i].outputF(_path);
+	}
+}

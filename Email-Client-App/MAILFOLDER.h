@@ -11,6 +11,6 @@ public:
 	MAILFOLDER();
 	MAILFOLDER(const std::string& _name);
 	void addMail(const EMAIL& mail);
-
+	void saveLocal(const std::string& user);
 };
 
