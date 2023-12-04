@@ -2,6 +2,7 @@
 
 EMAIL::EMAIL() {
 	isRead = 0;
+	keyMap = 0;
 }
 
 EMAIL::EMAIL(const std::vector<std::string>& buffer) {
@@ -18,6 +19,7 @@ EMAIL::EMAIL(const std::vector<std::string>& buffer) {
 	isRead = false;
 	attachFiles.resize(0);
 	recvBCC.resize(0);
+	keyMap = 0;
 }
 
 void EMAIL::show() {
@@ -165,8 +167,8 @@ std::streampos getFileSize(const std::string& filePath) {
 bool EMAIL::inputF(const std::string& file) {
 	std::fstream fileOpen(file.c_str(), std::ios::in);
 	if (fileOpen.is_open() == 0) {
-		return false;
 		fileOpen.close();
+		return false;
 	}
 	fileOpen >> isRead;
 	fileOpen.ignore();

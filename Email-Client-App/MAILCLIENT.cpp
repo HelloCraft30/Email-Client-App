@@ -35,8 +35,7 @@ MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 			for (int i = 1; i <= nMail; i++) {
 				std::string _path_mail = "Mail_client\\" + localUser + "\\" + a.name + "\\mail_" + std::to_string(i) + "\\content.txt";
 				EMAIL mail; 
-				if(mail.inputF(_path_mail))
-				a.addMail(mail);
+				if(mail.inputF(_path_mail)) a.addMail(mail);
 			}
 		}
 	}
@@ -294,6 +293,7 @@ void MAILCLIENT::updateInboxMail() {
 
 		//path to mail
 		std::string _path_mail = _path + "\\mail_" + std::to_string(im);
+		mail.keyMap = im;
 		_mkdir(_path_mail.c_str());
 
 		//file extensions things
