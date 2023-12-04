@@ -20,6 +20,11 @@ EMAIL::EMAIL(const std::vector<std::string>& buffer) {
 	attachFiles.resize(0);
 	recvBCC.resize(0);
 	keyMap = 0;
+	//remove last null character
+	sender.pop_back();
+	if (recvTO.size()) recvTO[recvTO.size() - 1].pop_back();
+	if (recvCC.size()) recvCC[recvCC.size() - 1].pop_back();
+	if (recvBCC.size()) recvBCC[recvBCC.size() - 1].pop_back();
 }
 
 void EMAIL::show() {
@@ -53,7 +58,7 @@ void EMAIL::show() {
 		int n = attachFiles.size();
 		std::cout << n << " files attached.\n";
 		for (int i = 0; i < n; i++) {
-			std::cout << i+1 << ". " << attachFiles[i].filePath << '\n';
+			std::cout << i + 1 << ". " << attachFiles[i].filePath << '\n';
 		}
 	}
 }
@@ -166,7 +171,7 @@ std::streampos getFileSize(const std::string& filePath) {
 
 bool EMAIL::inputF(const std::string& file) {
 	std::fstream fileOpen(file.c_str(), std::ios::in);
-	keyMap = atoi(file.substr(file.find("\\mail_")+6, file.find("\\content.txt")-5).c_str());
+	keyMap = atoi(file.substr(file.find("\\mail_") + 6, file.find("\\content.txt") - 5).c_str());
 	if (fileOpen.is_open() == 0) {
 		fileOpen.close();
 		return false;
@@ -178,7 +183,7 @@ bool EMAIL::inputF(const std::string& file) {
 	std::getline(fileOpen, temp);
 	std::stringstream ss{ temp };
 	recvTO.resize(0);
-	while (std::getline(ss, temp,'\t')) recvTO.push_back(temp);
+	while (std::getline(ss, temp, '\t')) recvTO.push_back(temp);
 
 	std::getline(fileOpen, temp);
 	std::stringstream ss2{ temp };
