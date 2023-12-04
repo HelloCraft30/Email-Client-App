@@ -1,7 +1,19 @@
 #include<iostream>
+#include <thread>
+#include <chrono>
 #include "MAILCLIENT.h"
 
+MAILCLIENT client("127.0.0.1", 2225, 3335);
+
+void threadFunction() {
+	while (true) {
+		client.updateInboxMail();
+		std::this_thread::sleep_for(std::chrono::seconds(10));
+	}
+}
+
 int main() {
+	std::thread updateThread(threadFunction);
 	// Initialize Winsock
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -10,7 +22,6 @@ int main() {
 	}
 
 	//mail client [IP, SMTP port, POP3 port]
-	MAILCLIENT client("127.0.0.1", 2225, 3335);
 	client.checkConnection();
 
 	while (true) {
@@ -29,6 +40,7 @@ int main() {
 		}
 	}
 
+	updateThread.join();
 	WSACleanup();
 	return 0;
 }
