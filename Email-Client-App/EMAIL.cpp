@@ -166,6 +166,7 @@ std::streampos getFileSize(const std::string& filePath) {
 
 bool EMAIL::inputF(const std::string& file) {
 	std::fstream fileOpen(file.c_str(), std::ios::in);
+	keyMap = atoi(file.substr(file.find("\\mail_")+6, file.find("\\content.txt")-5).c_str());
 	if (fileOpen.is_open() == 0) {
 		fileOpen.close();
 		return false;
@@ -208,6 +209,12 @@ bool EMAIL::inputF(const std::string& file) {
 
 void EMAIL::outputF(const std::string& file) {
 	std::fstream fileOpen(file.c_str(), std::ios::out | std::ios::trunc);
+	if (!fileOpen.is_open()) {
+		std::cout << file << "\n";
+		system("pause");
+		fileOpen.close();
+		return;
+	}
 	fileOpen << isRead << '\n';
 	fileOpen << sender << '\n';
 	for (const auto& x : recvTO) fileOpen << x << '\t';
