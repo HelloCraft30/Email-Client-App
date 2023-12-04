@@ -162,8 +162,12 @@ std::streampos getFileSize(const std::string& filePath) {
 	return fileSize;
 }
 
-void EMAIL::inputF(const std::string& file) {
+bool EMAIL::inputF(const std::string& file) {
 	std::fstream fileOpen(file.c_str(), std::ios::in);
+	if (fileOpen.is_open() == 0) {
+		return false;
+		fileOpen.close();
+	}
 	fileOpen >> isRead;
 	fileOpen.ignore();
 	std::getline(fileOpen, sender);
@@ -171,7 +175,7 @@ void EMAIL::inputF(const std::string& file) {
 	std::getline(fileOpen, temp);
 	std::stringstream ss{ temp };
 	recvTO.resize(0);
-	while (std::getline(ss, temp)) recvTO.push_back(temp);
+	while (std::getline(ss, temp,'\t')) recvTO.push_back(temp);
 
 	std::getline(fileOpen, temp);
 	std::stringstream ss2{ temp };
@@ -197,6 +201,7 @@ void EMAIL::inputF(const std::string& file) {
 		attachFiles.push_back(Attachment{ "N/A", temp });
 	}
 	fileOpen.close();
+	return true;
 }
 
 void EMAIL::outputF(const std::string& file) {

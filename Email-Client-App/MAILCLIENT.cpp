@@ -34,7 +34,8 @@ MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 			int nMail = 0; _nMailf >> nMail; _nMailf.close();
 			for (int i = 1; i <= nMail; i++) {
 				std::string _path_mail = "Mail_client\\" + localUser + "\\" + a.name + "\\mail_" + std::to_string(i) + "\\content.txt";
-				EMAIL mail; mail.inputF(_path_mail);
+				EMAIL mail; 
+				if(mail.inputF(_path_mail))
 				a.addMail(mail);
 			}
 		}
