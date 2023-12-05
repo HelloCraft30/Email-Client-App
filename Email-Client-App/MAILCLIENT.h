@@ -27,5 +27,17 @@ public:
 	void readMail(); 
 
 	int viewFunction();
+
+	//loc mail
+	void filterMails(const std::string& localUser);
 };
+
+//removes leading and trailing whitespaces va xoa ki tu NULL
+std::string trimSpaces(const std::string& input);
+
+//Ham kiem tra chuoi x co trong chuoi y hay khong
+bool isSubstring(const std::string& x, const std::string& y);
+
+//Tao menu chon noi dung muon loc email (From, Subject,....)
+int viewFunctionFilter();
 
