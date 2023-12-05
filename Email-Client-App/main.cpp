@@ -32,11 +32,14 @@ int main() {
 			system("pause");
 		} break;
 		case 2: {
-			client.readMail();
+			client.readMail();	
 		} break;
 		case 3: {
 			client.updateInboxMail();
 		}break;
+		case 4: {
+			client.filterMails(client.getUser());
+		} break;
 		}
 	}
 
