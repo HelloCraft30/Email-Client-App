@@ -128,7 +128,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="base64.cpp" />
-    <ClCompile Include="config.cpp" />
     <ClCompile Include="EMAIL.cpp" />
     <ClCompile Include="MAILCLIENT.cpp" />
     <ClCompile Include="MAILFOLDER.cpp" />
@@ -137,7 +136,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="base64.h" />
-    <ClInclude Include="config.h" />
     <ClInclude Include="EMAIL.h" />
     <ClInclude Include="MAILCLIENT.h" />
     <ClInclude Include="MAILFOLDER.h" />
