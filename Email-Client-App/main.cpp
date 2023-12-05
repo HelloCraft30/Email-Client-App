@@ -3,6 +3,8 @@
 #include <chrono>
 #include "MAILCLIENT.h"
 
+#include "pugixml/src/pugixml.hpp"
+
 MAILCLIENT client("127.0.0.1", 2225, 3335);
 
 void threadFunction() {
@@ -26,17 +28,17 @@ int main() {
 
 	while (true) {
 		switch (client.viewFunction()) {
+		case 0: {
+			exit(0);
+		} break;
 		case 1: {
-			EMAIL tmp; tmp.input(client.getUser());
+			EMAIL tmp; tmp.input(client.getLocalUser());
 			client.sendMail(tmp);
 			system("pause");
 		} break;
 		case 2: {
 			client.readMail();
 		} break;
-		case 3: {
-			client.updateInboxMail();
-		}break;
 		}
 	}
 

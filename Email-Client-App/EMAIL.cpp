@@ -27,7 +27,7 @@ EMAIL::EMAIL(const std::vector<std::string>& buffer) {
 	if (recvBCC.size()) recvBCC[recvBCC.size() - 1].pop_back();
 }
 
-void EMAIL::show() {
+bool EMAIL::show() {
 	std::cout << "----------\n";
 	std::cout << "To: ";
 	for (const auto& x : recvTO) {
@@ -53,13 +53,15 @@ void EMAIL::show() {
 	if (attachFiles.size() == 0) {
 		std::cout << "No file attached.\n";
 		std::cout << "----------\n";
+		return false;
 	}
 	else {
 		int n = attachFiles.size();
 		std::cout << n << " files attached.\n";
 		for (int i = 0; i < n; i++) {
-			std::cout << i + 1 << ". " << attachFiles[i].filePath << '\n';
+			std::cout << i + 1 << ". " << attachFiles[i].fileName << '\n';
 		}
+		return true;
 	}
 }
 
@@ -249,3 +251,32 @@ void extractNameAndNumber(const std::string& input, std::string& name, int& numb
 	std::istringstream numberStream(token);
 	numberStream >> number;
 }
+
+bool copyFile(const std::string& sourcePath, const std::string& destinationPath) {
+	std::ifstream sourceFile(sourcePath, std::ios::binary);
+	std::ofstream destinationFile(destinationPath, std::ios::binary);
+
+	if (sourceFile.is_open() && destinationFile.is_open()) {
+		sourceFile.seekg(0, std::ios::end);
+		std::streamsize fileSize = sourceFile.tellg();
+		sourceFile.seekg(0, std::ios::beg);
+
+		char* buffer = new char[fileSize];
+
+		sourceFile.read(buffer, fileSize);
+		destinationFile.write(buffer, fileSize);
+
+		delete[] buffer;
+
+		sourceFile.close();
+		destinationFile.close();
+
+		std::cout << "Copy file thanh cong!" << std::endl;
+		return true;
+	}
+	else {
+		std::cerr << "Loi: Khong mo duoc tap tin nguon hoac tap tin dich." << std::endl;
+		return false;
+	}
+}
+

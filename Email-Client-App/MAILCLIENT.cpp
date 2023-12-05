@@ -1,14 +1,52 @@
 #include "MAILCLIENT.h"
 
-std::string MAILCLIENT::getUser() {
+std::string MAILCLIENT::getLocalUser() {
 	return localUser;
 }
+
+std::string MAILCLIENT::getHostIp() {
+	return hostIP;
+}
+
+std::string MAILCLIENT::getPassword() {
+	return password;
+}
+
+int MAILCLIENT::getSMTPp() {
+	return SMTPp;
+}
+
+int MAILCLIENT::getPOP3p() {
+	return POP3p;
+}
+
+int MAILCLIENT::getAutoload() {
+	return autoLoad;
+}
+
+void MAILCLIENT::configClient(
+	const std::string& hostip,
+	const std::string& user,
+	const std::string& pass,
+	int smtp,
+	int pop3,
+	int atload
+) {
+	hostIP = hostip;
+	localUser = user;
+	password = pass;
+	SMTPp = smtp;
+	POP3p = pop3;
+	autoLoad = atload;
+}
+
 
 MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 	hostIP = IP;
 	SMTPp = smtp;
 	POP3p = pop3;
 	localUser = "hcmus.edu.vn";
+	password = "123";
 	smtpSock = socket(AF_INET, SOCK_STREAM, 0);
 	pop3Sock = socket(AF_INET, SOCK_STREAM, 0);
 	makeSpace();
@@ -34,8 +72,8 @@ MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 			int nMail = 0; _nMailf >> nMail; _nMailf.close();
 			for (int i = 1; i <= nMail; i++) {
 				std::string _path_mail = "Mail_client\\" + localUser + "\\" + a.name + "\\mail_" + std::to_string(i) + "\\content.txt";
-				EMAIL mail; 
-				if(mail.inputF(_path_mail)) a.addMail(mail);
+				EMAIL mail;
+				if (mail.inputF(_path_mail)) a.addMail(mail);
 			}
 		}
 	}
@@ -116,7 +154,7 @@ int MAILCLIENT::viewFunction() {
 	std::cout << "Menu:\n";
 	std::cout << "1. Send email\n";
 	std::cout << "2. Read email\n";
-
+	std::cout << "0. Quit\n";
 	std::cout << "Your choice: ";
 	int result = 0;
 	std::cin >> result;
@@ -191,8 +229,6 @@ void MAILCLIENT::sendMail(const EMAIL& mail) {
 		send(smtpSock, buffer.c_str(), buffer.size(), 0);
 		send(smtpSock, "\n", 1, 0);
 
-		std::cout << mail.attachFiles[i].filePath << '\n';
-		system("pause");
 
 		std::fstream fileOpen(mail.attachFiles[i].filePath.c_str(), std::ios::in | std::ios::binary);
 
@@ -337,17 +373,22 @@ void MAILCLIENT::updateInboxMail() {
 }
 
 void MAILCLIENT::readMail() {
+	__back_folders:
 	std::cout << "This is list of folders in your mailbox:\n";
 	for (int i = 0; i < folders.size(); i++) {
 		std::cout << i + 1 << ". " << folders[i].name << '\n';
 	}
-
-	int iFolder = 0;
-	std::cout << "Which folder do you want to read: ";
-	std::cin >> iFolder;
+	//std::cin.ignore();
+	std::string strFolder; int iFolder = 0;
+	std::cout << "Which folder do you want to read [ENTER to cancel]: ";
+	std::getline(std::cin, strFolder);
+	if (strFolder == "") return;
+	else iFolder = atoi(strFolder.c_str());
 	while (iFolder <= 0 || iFolder > folders.size()) {
-		std::cout << "Invalid input. Again: ";
-		std::cin >> iFolder;
+		std::cout << "Invalid input. Again [ENTER to cancel]: ";
+		std::getline(std::cin, strFolder);
+		if (strFolder == "") return;
+		else iFolder = atoi(strFolder.c_str());
 	}
 	if (folders[iFolder - 1].mails.size() == 0) {
 		std::cout << "Empty.\n";
@@ -361,14 +402,67 @@ void MAILCLIENT::readMail() {
 			folders[iFolder - 1].mails[i - 1].subShow(i);
 		}
 		int iEmail = 0;
-		std::cout << "Which email do you want to read: ";
-		std::cin >> iEmail;
+		std::string strEmail;
+		std::cout << "Which email do you want to read [ENTER to go back]: ";
+		std::getline(std::cin, strEmail);
+		if (strEmail == "") {
+			goto __back_folders;
+		}
+		else iEmail = atoi(strEmail.c_str());
 		while (iEmail <= 0 || iEmail > n) {
-			std::cout << "Invalid input. Again: ";
-			std::cin >> iEmail;
+			std::cout << "Invalid input. Again [ENTER to go back]: ";
+			std::getline(std::cin, strEmail);
+			if (strEmail == "") {
+				goto __back_folders;
+			}
+			else iEmail = atoi(strEmail.c_str());
 		}
 		folders[iFolder - 1].mails[iEmail - 1].isRead = 1;
-		folders[iFolder - 1].mails[iEmail - 1].show();
+		if (folders[iFolder - 1].mails[iEmail - 1].show()) {
+			std::cout << "Do you want to save attach files? [1: Yes / 0: No]: ";
+			int ans = 0;
+			std::cin >> ans;
+			if (ans) {
+				std::cout << "Which file?\n[\"ALL\" to select all files]\n[\"x y z..\" to select file x, y, z]: ";
+				std::string ansStr;
+				std::cin.ignore();
+				std::getline(std::cin, ansStr);
+				std::string __path_to_mail = "Mail_Client\\" + localUser + "\\" + folders[iFolder - 1].name
+					+ "\\" + "mail_" + std::to_string(folders[iFolder - 1].mails[iEmail - 1].keyMap)
+					+ "\\";
+				std::cout << "Where do you want to save: ";
+				std::string _path_save;
+				std::getline(std::cin, _path_save);
+				if (ansStr == "ALL") {
+					for (const auto& _x : folders[iFolder - 1].mails[iEmail - 1].attachFiles) {
+						std::string source = __path_to_mail + _x.fileName;
+						std::string destiny = _path_save+"\\" + _x.fileName;
+						if (copyFile(source, destiny)) {
+							std::cout << "Saved " << _x.fileName << ".\n";
+						}
+						else std::cout << "Failed to save " << _x.fileName << ".\n";
+					}
+				}
+				else {
+					std::stringstream _ss{ ansStr };
+					std::string _tmp;
+					while (_ss >> _tmp) {
+						int key = atoi(_tmp.c_str()) - 1;
+						if (key < 0 || key >= folders[iFolder - 1].mails[iEmail - 1].attachFiles.size()) {
+							std::cout << "Can not read ["<<_tmp<<"] file" << ".\n";
+						}
+						else {
+							std::string source = __path_to_mail + folders[iFolder - 1].mails[iEmail - 1].attachFiles[key].fileName;
+							std::string destiny = _path_save + "\\" + folders[iFolder - 1].mails[iEmail - 1].attachFiles[key].fileName;
+							if (copyFile(source, destiny)) {
+								std::cout << "Saved " << folders[iFolder - 1].mails[iEmail - 1].attachFiles[key].fileName << ".\n";
+							}
+							else std::cout << "Failed to save " << folders[iFolder - 1].mails[iEmail - 1].attachFiles[key].fileName << ".\n";
+						}
+					}
+				}
+			}
+		}
 		folders[iFolder - 1].saveLocal(localUser);
 	}
 

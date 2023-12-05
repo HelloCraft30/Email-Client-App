@@ -28,7 +28,7 @@ public:
 	int keyMap;
 	EMAIL();
 	EMAIL(const std::vector<std::string>& buffer);
-	void show();
+	bool show();
 	void input(const std::string& local);
 	bool inputF(const std::string& file);
 	void outputF(const std::string& file);
@@ -47,3 +47,6 @@ std::streampos getFileSize(const std::string& filePath);
 
 //tach "Name = test.docx,.docx,12109" thanh test.docx va 12109
 void extractNameAndNumber(const std::string& input, std::string& name, int& number);
+
+//copy file nay sang file khac
+bool copyFile(const std::string& sourcePath, const std::string& destinationPath);
