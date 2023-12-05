@@ -116,6 +116,8 @@ int MAILCLIENT::viewFunction() {
 	std::cout << "Menu:\n";
 	std::cout << "1. Send email\n";
 	std::cout << "2. Read email\n";
+	std::cout << "3. Update email\n";
+	std::cout << "4. Filter email\n";
 
 	std::cout << "Your choice: ";
 	int result = 0;
@@ -374,4 +376,197 @@ void MAILCLIENT::readMail() {
 
 
 	system("pause");
+}
+
+void MAILCLIENT::filterMails(const std::string& localUser) {
+	//Danh sach cac filter
+	std::vector<std::string> filterCategories = { "From", "Subject", "Content", "Spam" };
+	int filterChoice = viewFunctionFilter();
+
+	//Nhap noi dung muon loc
+	std::cout << "- " << filterCategories[filterChoice - 1] << ": ";
+	std::string temp;
+	std::getline(std::cin, temp);
+	std::vector<std::string> filterList = splitEmails(temp); //Danh sach noi dung muon loc email
+
+	//Chuyen den folder
+	std::cout << "- To folder:\n";
+	for (int i = 0; i < folders.size(); i++) {
+		std::cout << i + 1 << ". " << folders[i].name << '\n';
+	}
+
+	int iFolder = 0;
+	std::cout << "Your choice: ";
+	std::cin >> iFolder;
+	while (iFolder <= 0 || iFolder > folders.size()) {
+		std::cout << "Invalid input. Again: ";
+		std::cin >> iFolder;
+		std::cin.ignore();
+	}
+
+	//Xet truong hop loc
+	switch (filterChoice) {
+	case 1: { //Truong hop From
+		for (int i = 0; i < folders.size(); i++) {
+			int mailsQuantity = folders[i].mails.size(); //So luong mail trong folder
+			if (mailsQuantity != 0) { //Neu so mail trong folder nhieu hon 0
+				for (int j = 0; j < mailsQuantity; j++) {
+					for (int k = 0; k < filterList.size(); k++) {
+						std::string tmp1 = trimSpaces(folders[i].mails[j].sender);
+						std::string tmp2 = trimSpaces(filterList[k]);
+						if (tmp1 == tmp2) {
+							std::string srcPath = "Mail_client\\" + localUser + "\\" + folders[i].name + "\\mail_" + std::to_string(j + 1) + "\\content.txt";
+							std::string desPath = "Mail_client\\" + localUser + "\\" + folders[iFolder - 1].name;
+							//desPath thì lân cập nhập lai count roi moi them  + "\\mail_" + std::to_string(count) + "\\content.txt";
+
+							std::cout << srcPath << "\tto\t" << desPath << std::endl;
+
+							/*Chuyen noi dung mail folders[i].mails[j].show() den desPath
+							va xoa thu muc o srcPath*/
+
+						}
+					}
+				}
+			}
+		}
+	} break;
+	case 2: { //Truong hop subject
+		for (int i = 0; i < folders.size(); i++) {
+			int mailsQuantity = folders[i].mails.size(); //So luong mail trong folder
+			if (mailsQuantity != 0) { //Neu so mail trong folder nhieu hon 0
+				for (int j = 0; j < mailsQuantity; j++) {
+					for (int k = 0; k < filterList.size(); k++) {
+						std::string tmp1 = trimSpaces(folders[i].mails[j].subject);
+						std::string tmp2 = trimSpaces(filterList[k]);
+						if (isSubstring(tmp2, tmp1)) { //Neu tu can loc co trong subject thi loc
+							std::string srcPath = "Mail_client\\" + localUser + "\\" + folders[i].name + "\\mail_" + std::to_string(j + 1) + "\\content.txt";
+							std::string desPath = "Mail_client\\" + localUser + "\\" + folders[iFolder - 1].name;
+
+
+							std::cout << srcPath << "\tto\t" << desPath << std::endl;
+
+							/*Chuyen noi dung mail folders[i].mails[j].show() den desPath
+							va xoa thu muc o srcPath*/
+
+						}
+					}
+				}
+			}
+		}
+	} break;
+	case 3: { //Truong hop content
+		for (int i = 0; i < folders.size(); i++) {
+			int mailsQuantity = folders[i].mails.size(); //So luong mail trong folder
+			if (mailsQuantity != 0) { //Neu so mail trong folder nhieu hon 0
+				for (int j = 0; j < mailsQuantity; j++) {
+					for (int k = 0; k < filterList.size(); k++) {
+						std::vector<std::string> tmp1 = folders[i].mails[j].body; //vector lưu contents của email đó
+						std::string tmp2 = trimSpaces(filterList[k]);
+						for (int l = 0; l < tmp1.size(); l++) {
+							if (isSubstring(tmp2, tmp1[l])) { //nếu từ cần lọc có trong contents thì lọc
+								std::string srcPath = "Mail_client\\" + localUser + "\\" + folders[i].name + "\\mail_" + std::to_string(j + 1) + "\\content.txt";
+								std::string desPath = "Mail_client\\" + localUser + "\\" + folders[iFolder - 1].name;
+
+								std::cout << srcPath << "\tto\t" << desPath << std::endl;
+
+								/*Chuyen noi dung mail folders[i].mails[j].show() den desPath
+								va xoa thu muc o srcPath*/
+
+							}
+						}
+					}
+				}
+			}
+		}
+	} break;
+	case 4: { //Truong hop spam (neu subject hoac contents chua noi dung can loc)
+		for (int i = 0; i < folders.size(); i++) {
+			int mailsQuantity = folders[i].mails.size(); //So luong mail trong folder
+			if (mailsQuantity != 0) { //Neu so mail trong folder nhieu hon 0
+				for (int j = 0; j < mailsQuantity; j++) {
+					for (int k = 0; k < filterList.size(); k++) {
+						std::vector<std::string> tmpContent = folders[i].mails[j].body;
+						std::string tmpSubject = folders[i].mails[j].subject;
+						std::string tmp2 = trimSpaces(filterList[k]);
+						if (isSubstring(tmp2, tmpSubject)) { //Neu tu can loc co trong subject thi loc
+							std::string srcPath = "Mail_client\\" + localUser + "\\" + folders[i].name + "\\mail_" + std::to_string(j + 1) + "\\content.txt";
+							std::string desPath = "Mail_client\\" + localUser + "\\" + folders[iFolder - 1].name;
+
+
+							std::cout << srcPath << "\tto\t" << desPath << std::endl;
+
+							/*Chuyen noi dung mail folders[i].mails[j].show() den desPath
+							va xoa thu muc o srcPath*/
+
+						}
+						else { //Neu khong co trong subjec thi tem trong contents
+							for (int l = 0; l < tmpContent.size(); l++) {
+								if (isSubstring(tmp2, tmpContent[l])) {
+									std::string srcPath = "Mail_client\\" + localUser + "\\" + folders[i].name + "\\mail_" + std::to_string(j + 1) + "\\content.txt";
+									std::string desPath = "Mail_client\\" + localUser + "\\" + folders[iFolder - 1].name;
+
+									std::cout << srcPath << "\tto\t" << desPath << std::endl;
+
+									/*Chuyen noi dung mail folders[i].mails[j].show() den desPath
+									va xoa thu muc o srcPath*/
+
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	} break;
+	}
+
+	system("pause");
+}
+
+std::string trimSpaces(const std::string& input) {
+	std::string result;
+
+	for (char c : input) {
+		if (static_cast<unsigned char>(c) != 0) {
+			result.push_back(c);
+		}
+	}
+
+	size_t start = result.find_first_not_of(" \t\n\r\f\v");
+	if (start == std::string::npos) {
+		return "";
+	}
+
+	size_t end = result.find_last_not_of(" \t\n\r\f\v");
+	return result.substr(start, end - start + 1);
+}
+
+bool isSubstring(const std::string& x, const std::string& y) {
+	// Find the position of x in y
+	size_t found = y.find(x);
+
+	// If found is not equal to npos, x is a substring of y
+	return found != std::string::npos;
+}
+
+int viewFunctionFilter() {
+	//Menu chon loai cau hinh
+	std::cout << "\n- Menu filter email:\n";
+	std::cout << "1. From\n";
+	std::cout << "2. Subject\n";
+	std::cout << "3. Content\n";
+	std::cout << "4. Spam\n";
+
+	int filterChoice = 0;
+	std::cout << "Your choice: ";
+	std::cin >> filterChoice;
+	std::cin.ignore();
+
+	while (filterChoice <= 0 || filterChoice > 4) {
+		std::cout << "Invalid input. Again: ";
+		std::cin >> filterChoice;
+		std::cin.ignore();
+	}
+
+	return filterChoice;
 }
