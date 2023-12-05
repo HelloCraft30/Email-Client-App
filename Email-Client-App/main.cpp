@@ -3,18 +3,18 @@
 #include <chrono>
 #include "MAILCLIENT.h"
 
-#include "pugixml/src/pugixml.hpp"
-
 MAILCLIENT client("127.0.0.1", 2225, 3335);
 
 void threadFunction() {
+	static int delay = client.getAutoload();
 	while (true) {
 		client.updateInboxMail();
-		std::this_thread::sleep_for(std::chrono::seconds(10));
+		std::this_thread::sleep_for(std::chrono::seconds(delay));
 	}
 }
 
 int main() {
+	system("pause");
 	std::thread updateThread(threadFunction);
 	// Initialize Winsock
 	WSADATA wsaData;

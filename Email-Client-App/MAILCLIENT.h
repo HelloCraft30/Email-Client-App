@@ -2,10 +2,13 @@
 #include "MAILFOLDER.h"
 #include<winsock.h>
 #include "base64.h"
+#include "config.h"
+#include "pugixml/src/pugixml.hpp"
 #pragma comment(lib, "ws2_32.lib")
 
 class MAILCLIENT{
 private:
+	void readConfigFromXML();
 	std::string hostIP;
 	int SMTPp;
 	int POP3p;

@@ -42,11 +42,13 @@ void MAILCLIENT::configClient(
 
 
 MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
+	//default values
 	hostIP = IP;
 	SMTPp = smtp;
 	POP3p = pop3;
 	localUser = "hcmus.edu.vn";
 	password = "123";
+	readConfigFromXML();
 	smtpSock = socket(AF_INET, SOCK_STREAM, 0);
 	pop3Sock = socket(AF_INET, SOCK_STREAM, 0);
 	makeSpace();
@@ -126,6 +128,36 @@ bool MAILCLIENT::checkConnection() {
 
 bool createFolder(const char* str) {
 	return !_mkdir(str);
+}
+
+void MAILCLIENT::readConfigFromXML() {
+	pugi::xml_document doc;
+	std::string path;
+	path = "Mail_Client/config.xml";
+	if (doc.load_file(path.c_str())) {
+		pugi::xml_node userNode = doc.child("config_user");
+		std::string localUser = userNode.child("localUser").child_value();
+		std::string password = userNode.child("password").child_value();
+		std::string ip = userNode.child("ip").child_value();
+		int smtp = userNode.child("smtp").text().as_int();
+		int pop3 = userNode.child("pop3").text().as_int();
+		int autoload = userNode.child("autoload").text().as_int();
+
+		std::cout << "Applied config file:\n";
+		std::cout << "----------------------" << std::endl;
+		std::cout << "Email: " << localUser << std::endl;
+		std::cout << "Password: " << password << std::endl;
+		std::cout << "IP: " << ip << std::endl;
+		std::cout << "SMTP Port: " << smtp << std::endl;
+		std::cout << "POP3 Port: " << pop3 << std::endl;
+		std::cout << "Autoload Time: " << autoload << std::endl;
+		std::cout << "----------------------" << std::endl;
+
+		configClient(ip, localUser, password, smtp, pop3, autoload);
+	}
+	else {
+		std::cout << "Failed to load XML file: " << path << std::endl;
+	}
 }
 
 bool MAILCLIENT::makeSpace() {

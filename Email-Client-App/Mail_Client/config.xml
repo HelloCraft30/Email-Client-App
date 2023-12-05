@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config_user>
+	<localUser>hcmus.edu.vn</localUser>
+	<password>123</password>
+	<ip>127.0.0.1</ip>
+	<smtp>2225</smtp>
+	<pop3>3335</pop3>
+	<autoload>0</autoload>
+</config_user>
