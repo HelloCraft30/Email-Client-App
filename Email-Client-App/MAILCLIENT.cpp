@@ -373,7 +373,8 @@ void MAILCLIENT::updateInboxMail() {
 }
 
 void MAILCLIENT::readMail() {
-	__back_folders:
+__back_folders:
+	std::cout << "----------\n";
 	std::cout << "This is list of folders in your mailbox:\n";
 	for (int i = 0; i < folders.size(); i++) {
 		std::cout << i + 1 << ". " << folders[i].name << '\n';
@@ -394,6 +395,7 @@ void MAILCLIENT::readMail() {
 		std::cout << "Empty.\n";
 	}
 	else {
+		std::cout << "-------------------\n";
 		std::cout << "This is list of mails in " << folders[iFolder - 1].name << " folder:\n";
 
 		int n = folders[iFolder - 1].mails.size();

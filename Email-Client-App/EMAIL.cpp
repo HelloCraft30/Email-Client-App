@@ -28,7 +28,7 @@ EMAIL::EMAIL(const std::vector<std::string>& buffer) {
 }
 
 bool EMAIL::show() {
-	std::cout << "----------\n";
+	std::cout << "------------------------------\n";
 	std::cout << "To: ";
 	for (const auto& x : recvTO) {
 		std::cout << '<' << x << ">, ";
@@ -52,7 +52,7 @@ bool EMAIL::show() {
 
 	if (attachFiles.size() == 0) {
 		std::cout << "No file attached.\n";
-		std::cout << "----------\n";
+		std::cout << "------------------------------\n";
 		return false;
 	}
 	else {
@@ -68,7 +68,7 @@ bool EMAIL::show() {
 void EMAIL::subShow(int i) {
 	std::cout << i << ". ";
 	if (isRead == false) std::cout << "<UNREAD> ";
-	else std::cout << "         ";
+	else std::cout << "< READ > ";
 	std::cout << "<" << sender << "> <" << subject << ">\n";
 }
 
