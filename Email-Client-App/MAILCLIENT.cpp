@@ -314,7 +314,7 @@ void MAILCLIENT::updateInboxMail() {
 	send(pop3Sock, SEND.c_str(), SEND.size(), 0);
 	//S: +OK
 	recv(pop3Sock, __remove, 20, 0);
-	SEND = "PASS 123\r\n";
+	SEND = "PASS " + password + "\r\n";
 	send(pop3Sock, SEND.c_str(), SEND.size(), 0);
 	//S: +OK
 	recv(pop3Sock, __remove, 20, 0);
