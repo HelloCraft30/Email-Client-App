@@ -2,7 +2,6 @@
 #include "MAILFOLDER.h"
 #include<winsock.h>
 #include "base64.h"
-#include "config.h"
 #include "pugixml/src/pugixml.hpp"
 #pragma comment(lib, "ws2_32.lib")
 
@@ -23,6 +22,7 @@ private:
 	std::vector<MAILFOLDER> folders;
 	int autoLoad;
 public:
+
 	bool checkConnection();
 
 	//set get functions
@@ -47,7 +47,11 @@ public:
 
 	void sendMail(const EMAIL& mail);
 	void updateInboxMail();
-	void readMail(); 
+	void readMail();
+
+	void filterMail(EMAIL& email, const std::string& user);
+	void filterMail(std::vector<EMAIL>& emails, const std::string& user);
+	void filterMail();
 
 	int viewFunction();
 };

@@ -8,6 +8,7 @@
 #include <thread>
 #include <chrono>
 #include <direct.h>
+#include <Windows.h>
 
 struct Attachment {
 	std::string filePath;
@@ -33,6 +34,9 @@ public:
 	bool inputF(const std::string& file);
 	void outputF(const std::string& file);
 	void subShow(int i);
+
+	//delete an email
+	void delEmailinLocal(const std::string& user);
 };
 
 //Tach thanh cac email
@@ -50,3 +54,12 @@ void extractNameAndNumber(const std::string& input, std::string& name, int& numb
 
 //copy file nay sang file khac
 bool copyFile(const std::string& sourcePath, const std::string& destinationPath);
+
+//move folder from old to new path
+void moveFolder(const char* oldPath, const char* newPath);
+
+//create temporary copy file
+void tmpCopyEmail(const std::string& user, int iMap);
+
+//move an email
+void moveEmail(const std::string& user, const std::string& folder, int keyMap);

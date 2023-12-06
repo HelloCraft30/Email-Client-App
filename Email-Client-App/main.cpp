@@ -39,6 +39,9 @@ int main() {
 		case 2: {
 			client.readMail();
 		} break;
+		case 3: {
+			client.filterMail();
+		} break;
 		}
 	}
 

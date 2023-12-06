@@ -72,6 +72,17 @@ void EMAIL::subShow(int i) {
 	std::cout << "<" << sender << "> <" << subject << ">\n";
 }
 
+void EMAIL::delEmailinLocal(const std::string& user) {
+	std::string _path = "Mail_Client\\" + user + "\\Inbox"+"\\mail_" + std::to_string(keyMap);
+	for (const auto& x : attachFiles) {
+		std::string tmp = _path + "\\" + x.fileName;
+		std::remove(tmp.c_str());
+	}
+	std::string _path_content = "Mail_Client\\" + user + "\\Inbox" + "\\mail_" + std::to_string(keyMap) + "\\" + "content.txt";
+	std::remove(_path_content.c_str());
+	RemoveDirectoryA(_path.c_str());
+}
+
 std::vector<std::string> splitEmails(const std::string& emailString) {
 	std::istringstream iss(emailString);
 	std::vector<std::string> emailAddresses;
@@ -105,12 +116,12 @@ void EMAIL::input(const std::string& local) {
 	recvBCC = splitEmails(temp);
 	std::cout << "Subject: ";
 	std::getline(std::cin, subject);
-	std::cout << "Body:\nEnter continuously, type a separate '.' to end.\n";
+	std::cout << "Enter continuously, type a separate '.' to end.\nBody:\n";
 	while (std::getline(std::cin, temp)) {
 		if (temp == ".") break;
 		else body.push_back(temp);
 	}
-	std::cout << "Attach file? [1]yes [0]no : ";
+	std::cout << "Attach file?\n[1] YES [0] NO . Input: ";
 	bool athF = false;
 	std::cin >> athF;
 	if (athF) {
@@ -271,12 +282,52 @@ bool copyFile(const std::string& sourcePath, const std::string& destinationPath)
 		sourceFile.close();
 		destinationFile.close();
 
-		std::cout << "Copy file thanh cong!" << std::endl;
 		return true;
 	}
 	else {
-		std::cerr << "Loi: Khong mo duoc tap tin nguon hoac tap tin dich." << std::endl;
 		return false;
 	}
 }
 
+void moveFolder(const char* oldPath, const char* newPath) {
+	int result = rename(oldPath, newPath);
+	if (result == 1) {
+		perror("Error while moving email\n");
+	}
+}
+
+void tmpCopyEmail(const std::string& user, int iMap) {
+	std::string _path = "Mail_Client\\" + user + "\\Inbox\\mail_" + std::to_string(iMap);
+	std::string tmpPath = "Mail_Client\\" + user + "\\Inbox\\tmp";
+	_mkdir(tmpPath.c_str());
+	//copy content.txt
+	std::string contentDestinationPath = tmpPath + "\\content.txt";
+	std::string contentSourcePath = _path + "\\content.txt";
+	copyFile(contentSourcePath, contentDestinationPath);
+	EMAIL email;
+	email.inputF(contentSourcePath);
+	//copy attachments
+	for (const auto& x : email.attachFiles) {
+		contentDestinationPath = tmpPath + "\\" + x.fileName;
+		contentSourcePath = _path + "\\" + x.fileName;
+		copyFile(contentSourcePath, contentDestinationPath);
+	}
+}
+
+void moveEmail(const std::string& user, const std::string& folder, int keyMap) {
+	tmpCopyEmail(user, keyMap);
+	std::string _path_source = "Mail_Client\\" + user + "\\Inbox\\tmp";
+	std::string _path_destination = "Mail_Client\\" + user + "\\" + folder;
+	std::string _path_destination_count = "Mail_Client\\" + user + "\\" + folder + "\\count.txt";
+	int nMail = 0;
+	std::fstream countGet(_path_destination_count.c_str(), std::ios::in);
+	countGet >> nMail;
+	countGet.close();
+	nMail++;
+	std::fstream countSet(_path_destination_count.c_str(), std::ios::out | std::ios::trunc);
+	countSet << nMail;
+	countSet.close();
+	_path_destination += "\\";
+	_path_destination += "mail_" + std::to_string(nMail);
+	moveFolder(_path_source.c_str(), _path_destination.c_str());
+}

@@ -1,4 +1,4 @@
-#include "MAILCLIENT.h"
+﻿#include "MAILCLIENT.h"
 
 std::string MAILCLIENT::getLocalUser() {
 	return localUser;
@@ -79,6 +79,11 @@ MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 			}
 		}
 	}
+
+	//filter file.txt create
+	std::string _path_filter = "Mail_client\\" + localUser + "\\" + "filters.txt";
+	std::fstream filterF(_path_filter.c_str(), std::ios::app | std::ios::out);
+	filterF.close();
 }
 
 bool MAILCLIENT::connectSmtp() {
@@ -186,6 +191,7 @@ int MAILCLIENT::viewFunction() {
 	std::cout << "Menu:\n";
 	std::cout << "1. Send email\n";
 	std::cout << "2. Read email\n";
+	std::cout << "3. Filter\n";
 	std::cout << "0. Quit\n";
 	std::cout << "Your choice: ";
 	int result = 0;
@@ -400,6 +406,13 @@ void MAILCLIENT::updateInboxMail() {
 		std::string _mailContent = _path_mail + "\\content.txt";
 		mail.outputF(_mailContent);
 		folders[0].addMail(mail);
+
+		filterMail(mail, localUser);
+
+		//update folders
+		for (auto& a : folders) {
+			a.updateMails(localUser);
+		}
 	}
 	disconnect(pop3Sock);
 }
@@ -453,7 +466,7 @@ __back_folders:
 		}
 		folders[iFolder - 1].mails[iEmail - 1].isRead = 1;
 		if (folders[iFolder - 1].mails[iEmail - 1].show()) {
-			std::cout << "Do you want to save attach files? [1: Yes / 0: No]: ";
+			std::cout << "Do you want to save attach files?\n[1] YES [0] NO . Input: ";
 			int ans = 0;
 			std::cin >> ans;
 			if (ans) {
@@ -470,7 +483,7 @@ __back_folders:
 				if (ansStr == "ALL") {
 					for (const auto& _x : folders[iFolder - 1].mails[iEmail - 1].attachFiles) {
 						std::string source = __path_to_mail + _x.fileName;
-						std::string destiny = _path_save+"\\" + _x.fileName;
+						std::string destiny = _path_save + "\\" + _x.fileName;
 						if (copyFile(source, destiny)) {
 							std::cout << "Saved " << _x.fileName << ".\n";
 						}
@@ -483,7 +496,7 @@ __back_folders:
 					while (_ss >> _tmp) {
 						int key = atoi(_tmp.c_str()) - 1;
 						if (key < 0 || key >= folders[iFolder - 1].mails[iEmail - 1].attachFiles.size()) {
-							std::cout << "Can not read ["<<_tmp<<"] file" << ".\n";
+							std::cout << "Can not read [" << _tmp << "] file" << ".\n";
 						}
 						else {
 							std::string source = __path_to_mail + folders[iFolder - 1].mails[iEmail - 1].attachFiles[key].fileName;
@@ -501,5 +514,354 @@ __back_folders:
 	}
 
 
+	system("pause");
+}
+
+int viewFuncFilterMail() {
+	std::cout << "----------\n";
+	std::cout << "1. New filter\n";
+	std::cout << "2. See all filters\n";
+	std::string ans;
+	int cmdLine = 0;
+	std::cout << "Your choice [ENTER to go back]: ";
+	std::getline(std::cin, ans);
+	if (ans == "") {
+		return 0;
+	}
+	else cmdLine = atoi(ans.c_str());
+	while (cmdLine <= 0 || cmdLine > 2) {
+		std::cout << "Invalid input. Again [ENTER to go back]: ";
+		std::getline(std::cin, ans);
+		if (ans == "") {
+			return 0;
+		}
+		else cmdLine = atoi(ans.c_str());
+	}
+	switch (cmdLine) {
+	case 1: {
+		std::cout << "--------------------";
+		std::cout << "\nNew filter email:\n";
+		std::cout << "1. By sender's address\n";
+		std::cout << "2. By subject\n";
+		std::cout << "3. By content\n";
+		std::cout << "4. To spam\n";
+		std::cout << "Type: ";
+		std::cin >> cmdLine;
+		while (cmdLine <= 0 || cmdLine > 4) {
+			std::cout << "Invalid input. Again: ";
+			std::cin >> cmdLine;
+		}
+		return (100 + cmdLine);
+	}break;
+	case 2: {
+		//print all filters - ask to delete filter?
+
+		return 200;
+	}break;
+	}
+
+}
+
+bool newFilterMail(int cmdLine, const std::string& user) {
+	if (cmdLine / 100 != 1) return false;
+	std::cout << "------------------------------\n";
+	std::string _path_filter = "Mail_client\\" + user + "\\" + "filters.txt";
+	std::fstream filterFile(_path_filter.c_str(), std::ios::app | std::ios::out);
+	cmdLine %= 10;
+	switch (cmdLine) {
+	case 1: {
+		std::cin.ignore();
+		std::cout << "From: [Enter all senders | separated by ','\n";
+		std::string inputStr;
+		std::getline(std::cin, inputStr);
+		std::vector<std::string> senders = splitEmails(inputStr);
+
+		std::cout << "To folder: [Please enter an existed folder]\n";
+		std::string folderTo;
+		std::getline(std::cin, folderTo);
+		//write to filter.txt
+		filterFile << "From:\t";
+		for (int i = 0; i < senders.size() - 1; i++) {
+			filterFile << senders[i] << ", ";
+		}
+		filterFile << senders[senders.size() - 1] << "\tTo:\t" << folderTo << "\n";
+		filterFile.close();
+	} break;
+	case 2: {
+		std::cin.ignore();
+		std::cout << "Subject's keyword: [Enter all keywords | separated by 'SPACE'\n";
+		std::vector<std::string> keys;
+		std::string inputStr;
+		std::getline(std::cin, inputStr);
+		std::stringstream ss{ inputStr };
+		while (ss >> inputStr) keys.push_back(inputStr);
+		std::cout << "To folder: [Please enter an existed folder]\n";
+		std::string folderTo;
+		std::getline(std::cin, folderTo);
+		filterFile << "Subject:\t";
+		for (int i = 0; i < keys.size() - 1; i++) {
+			filterFile << keys[i] << ' ';
+		}
+		filterFile << keys[keys.size() - 1] << "\tTo:\t" << folderTo << "\t\n";
+		filterFile.close();
+	} break;
+	case 3: {
+		std::cin.ignore();
+		std::cout << "Content's keyword: [Enter all keywords | separated by 'SPACE'\n";
+		std::vector<std::string> keys;
+		std::string inputStr;
+		std::getline(std::cin, inputStr);
+		std::stringstream ss{ inputStr };
+		while (ss >> inputStr) keys.push_back(inputStr);
+		std::cout << "To folder: [Please enter an existed folder]\n";
+		std::string folderTo;
+		std::getline(std::cin, folderTo);
+		filterFile << "Content:\t";
+		for (int i = 0; i < keys.size() - 1; i++) {
+			filterFile << keys[i] << ' ';
+		}
+		filterFile << keys[keys.size() - 1] << "\tTo:\t" << folderTo << "\n";
+		filterFile.close();
+	} break;
+	case 4: {
+		std::cin.ignore();
+		std::cout << "SPAM's keyword: [Enter all keywords | separated by 'SPACE'\n";
+		std::vector<std::string> keys;
+		std::string inputStr;
+		std::getline(std::cin, inputStr);
+		std::stringstream ss{ inputStr };
+		while (ss >> inputStr) keys.push_back(inputStr);
+		filterFile << "Spam:\t";
+		for (int i = 0; i < keys.size() - 1; i++) {
+			filterFile << keys[i] << ' ';
+		}
+		filterFile << keys[keys.size() - 1] << "\tTo:\tSpam\n";
+		filterFile.close();
+	} break;
+	}
+	return true;
+}
+
+bool printFilters(const std::string& user) {
+	int iMap = 1;
+	bool isEmpty = 1;
+	std::string _path_filter = "Mail_client\\" + user + "\\" + "filters.txt";
+	std::fstream filterFile(_path_filter.c_str(), std::ios::in);
+	std::string temp;
+	while (std::getline(filterFile, temp)) {
+		isEmpty = 0;
+		std::cout << "--------------------\n";
+		std::cout << "Filter[" << iMap++ << "]\n";
+		std::stringstream ss{ temp };
+		std::string _temp;
+		std::getline(ss, _temp, '\t');
+		if (_temp == "From:") {
+			std::cout << "From senders's address:\n";
+			std::getline(ss, _temp, '\t');
+			std::stringstream _ss{ _temp };
+			std::string _temp_;
+			while (_ss >> _temp_) {
+				if (_temp_[_temp_.size() - 1] == ',') _temp_.pop_back();
+				std::cout << '<' << _temp_ << '>' << " ";
+			}std::cout << "\n";
+			std::getline(ss, _temp, '\t');
+			std::getline(ss, _temp, '\t');
+			std::cout << "To folder: " << _temp << '\n';
+		}
+		else if (_temp == "Subject:") {
+			std::cout << "From subject has keywords:\n";
+			std::getline(ss, _temp, '\t');
+			std::stringstream _ss{ _temp };
+			std::string _temp_;
+			while (_ss >> _temp_) {
+				if (_temp_[_temp_.size() - 1] == ',') _temp_.pop_back();
+				std::cout << '\"' << _temp_ << '\"' << " ";
+			}std::cout << "\n";
+			std::getline(ss, _temp, '\t');
+			std::getline(ss, _temp, '\t');
+			std::cout << "To folder: " << _temp << '\n';
+		}
+		else if (_temp == "Content:") {
+			std::cout << "From content has keywords:\n";
+			std::getline(ss, _temp, '\t');
+			std::stringstream _ss{ _temp };
+			std::string _temp_;
+			while (_ss >> _temp_) {
+				if (_temp_[_temp_.size() - 1] == ',') _temp_.pop_back();
+				std::cout << '\"' << _temp_ << '\"' << " ";
+			}std::cout << "\n";
+			std::getline(ss, _temp, '\t');
+			std::getline(ss, _temp, '\t');
+			std::cout << "To folder: " << _temp << '\n';
+		}
+		else if (_temp == "Spam:") {
+			std::cout << "From subject, content have keywords To Spam:\n";
+			std::getline(ss, _temp, '\t');
+			std::stringstream _ss{ _temp };
+			std::string _temp_;
+			while (_ss >> _temp_) {
+				if (_temp_[_temp_.size() - 1] == ',') _temp_.pop_back();
+				std::cout << '\"' << _temp_ << '\"' << " ";
+			}std::cout << "\n";
+		}
+	}
+	if (isEmpty) std::cout << "There's no filters\n";
+	std::cout << "------------------------------\n";
+	filterFile.close();
+	return !isEmpty;
+}
+
+void delFilter(const std::string& user) {
+	int _count = 0;
+	std::string _path_filter = "Mail_client\\" + user + "\\" + "filters.txt", temp;
+	std::fstream filterFileI(_path_filter.c_str(), std::ios::in);
+	std::vector<std::string> lines;
+	while (std::getline(filterFileI, temp)) {
+		lines.push_back(temp);
+		_count++;
+	}
+	filterFileI.close();
+
+	if (_count == 0) return;
+
+	std::cout << "Which filter [ENTER number]: ";
+	int imap = 0;
+	std::cin >> imap;
+	while (imap <= 0 || imap > _count) {
+		std::cout << "Not found. Retry: ";
+		std::cin >> imap;
+	}
+	lines.erase(lines.begin() + imap - 1);
+
+	std::fstream filterFileO(_path_filter.c_str(), std::ios::out | std::ios::trunc);
+	for (const auto& x : lines) {
+		filterFileO << x << '\n';
+	}
+	filterFileO.close();
+}
+
+void MAILCLIENT::filterMail(EMAIL& email, const std::string& user) {
+	std::string _path_filter = "Mail_client\\" + user + "\\" + "filters.txt";
+	std::fstream filterFile(_path_filter.c_str(), std::ios::in);
+	std::string line;
+	bool isChecked = false;
+	//get to destination
+	while (std::getline(filterFile, line)) {
+		std::stringstream ss{ line };
+		std::getline(ss, line, '\t');
+		if (line == "From:") {
+			std::getline(ss, line, '\t');
+			std::vector<std::string> senders = splitEmails(line);
+
+			for (const auto& x : senders) {
+				if (x == email.sender) {
+					isChecked = true; break;
+				}
+			}
+			std::getline(ss, line, '\t');
+			std::getline(ss, line, '\t');
+			if (isChecked) {
+				moveEmail(user, line, email.keyMap);
+				break;
+			}
+		}
+		else if (line == "Subject:") {
+			std::getline(ss, line, '\t');
+			std::vector<std::string> keywords;
+			std::stringstream keyss{ line };
+			while (keyss >> line) keywords.push_back(line);
+
+			for (const auto& x : keywords) {
+				if (email.subject.find(x) != -1) {
+					isChecked = true; break;
+				}
+			}
+			std::getline(ss, line, '\t');
+			std::getline(ss, line, '\t');
+			if (isChecked) {
+				moveEmail(user, line, email.keyMap);
+				break;
+			}
+		}
+		else if (line == "Content:") {
+			std::getline(ss, line, '\t');
+			std::vector<std::string> keywords;
+			std::stringstream keyss{ line };
+			while (keyss >> line) keywords.push_back(line);
+
+			for (const auto& x : keywords) {
+				for (const auto& y : email.body) {
+					if (y.find(x) != -1) {
+						isChecked = true; break;
+					}
+				}
+				if (isChecked) break;
+			}
+			std::getline(ss, line, '\t');
+			std::getline(ss, line, '\t');
+			if (isChecked) {
+				moveEmail(user, line, email.keyMap);
+				break;
+			}
+		}
+		else if (line == "Spam:") {
+			std::getline(ss, line, '\t');
+			std::vector<std::string> keywords;
+			std::stringstream keyss{ line };
+			while (keyss >> line) keywords.push_back(line);
+			
+			for (const auto& x : keywords) {
+				if (email.subject.find(x) != -1) {
+					isChecked = true; break;
+				}
+			}
+
+			if (isChecked == 0) {
+				for (const auto& x : keywords) {
+					for (const auto& y : email.body) {
+						if (y.find(x) != -1) {
+							isChecked = true; break;
+						}
+					}
+					if (isChecked) break;
+				}
+			}
+
+			std::getline(ss, line, '\t');
+			std::getline(ss, line, '\t');
+			if (isChecked) {
+				moveEmail(user, line, email.keyMap);
+				break;
+			}
+		}
+	}
+	//remove email if found
+	if(isChecked) email.delEmailinLocal(user);
+}
+
+void MAILCLIENT::filterMail(std::vector<EMAIL>& emails, const std::string& user) {
+	for (EMAIL& x : emails) {
+		filterMail(x, user);
+	}
+}
+
+void MAILCLIENT::filterMail() {
+	int cmdLine = viewFuncFilterMail();
+	if (newFilterMail(cmdLine, localUser)) {
+		filterMail(folders[0].mails, localUser);
+
+		//update folders
+		for (auto& a : folders) {
+			a.updateMails(localUser);
+		}
+	}
+	if (cmdLine == 200) {
+		if (printFilters(localUser)) {
+			bool ans = 0;
+			std::cout << "Do you want to delete a filter? Only work for next emails\n[1] YES [0] NO . Input: ";
+			std::cin >> ans;
+			if (ans) delFilter(localUser);
+		}
+	}
 	system("pause");
 }
