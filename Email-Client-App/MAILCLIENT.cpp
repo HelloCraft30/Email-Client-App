@@ -1,4 +1,5 @@
-﻿#include "MAILCLIENT.h"
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include "MAILCLIENT.h"
 
 std::string MAILCLIENT::getLocalUser() {
 	return localUser;
@@ -89,13 +90,17 @@ MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 bool MAILCLIENT::connectSmtp() {
 	closesocket(smtpSock);
 	smtpSock = socket(AF_INET, SOCK_STREAM, 0);
+	if (smtpSock == INVALID_SOCKET) {
+		smtpSock = socket(AF_INET, SOCK_STREAM, 0);
+	}
 	sockaddr_in serverAddress;
 	serverAddress.sin_family = AF_INET;
 	serverAddress.sin_port = htons(SMTPp);
 	serverAddress.sin_addr.s_addr = inet_addr(hostIP.c_str());
 
 	if (connect(smtpSock, (struct sockaddr*)&serverAddress, sizeof(serverAddress))) {
-		std::cout << "Failed to connect to SMTP protocol\n";
+		std::cout << "Failed to connect to SMTP protocol\n"<< strerror(errno) << '\n';
+		closesocket(smtpSock);
 		return false;
 	};
 	char removeFirstLine[20]{};
@@ -106,13 +111,17 @@ bool MAILCLIENT::connectSmtp() {
 bool MAILCLIENT::connectPop3() {
 	closesocket(pop3Sock);
 	pop3Sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (pop3Sock == INVALID_SOCKET) {
+		pop3Sock = socket(AF_INET, SOCK_STREAM, 0);
+	}
 	sockaddr_in serverAddress;
 	serverAddress.sin_family = AF_INET;
 	serverAddress.sin_port = htons(POP3p);
 	serverAddress.sin_addr.s_addr = inet_addr(hostIP.c_str());
 
 	if (connect(pop3Sock, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
-		std::cout << "Failed to connect to POP3 protocol\n";
+		std::cout << "Failed to connect to POP3 protocol\n" << strerror(errno) << '\n';
+		closesocket(pop3Sock);
 		return false;
 	};
 	char removeFirstLine[20]{};
@@ -125,10 +134,27 @@ void MAILCLIENT::disconnect(SOCKET& socket) {
 }
 
 bool MAILCLIENT::checkConnection() {
-	if (connectSmtp() == false) exit(-1);
+
+	bool first = connectSmtp();
+	disconnect(smtpSock);
+	bool second = connectPop3();
+	disconnect(pop3Sock);
+	if (first && second) {
+		std::cout << "Connections: Well done. No errors.\n";
+		std::cout << "-----------------------\n";
+		system("pause");
+		return true;
+	}
+	else {
+		std::cout << "Try again ...\n";
+		std::cout << "-----------------------\n";
+		exit(-1);
+	}
+
+	/*if (connectSmtp() == false) exit(-1);
 	disconnect(smtpSock);
 	if (connectPop3() == false) exit(-1);
-	disconnect(pop3Sock);
+	disconnect(pop3Sock);*/
 }
 
 bool createFolder(const char* str) {
@@ -184,15 +210,16 @@ bool MAILCLIENT::makeSpace() {
 
 int MAILCLIENT::viewFunction() {
 	system("cls");
-	std::cout << "----------------------------------------\n";
-	std::cout << "    MAIL-CLIENT\n";
-	std::cout << "----------------------------------------\n";
+	std::cout << "--------------------------------------------------------------------------------\n";
+	std::cout << "                                  MAIL-CLIENT\n";
+	std::cout << "--------------------------------------------------------------------------------\n";
 	std::cout << "Hello, <" << localUser << ">\n";
-	std::cout << "Menu:\n";
-	std::cout << "1. Send email\n";
-	std::cout << "2. Read email\n";
-	std::cout << "3. Filter\n";
-	std::cout << "0. Quit\n";
+	std::cout << "----------------------------\n";
+	std::cout << "[MENU]:\n";
+	std::cout << "[1]. Send email\n";
+	std::cout << "[2]. Read email\n";
+	std::cout << "[3]. Filter\n";
+	std::cout << "[0]. Quit\n\n";
 	std::cout << "Your choice: ";
 	int result = 0;
 	std::cin >> result;
@@ -417,30 +444,34 @@ void MAILCLIENT::updateInboxMail() {
 	disconnect(pop3Sock);
 }
 
-void MAILCLIENT::readMail() {
+int MAILCLIENT::readMail() {
 __back_folders:
-	std::cout << "----------\n";
+__back_inputFolders:
+	std::cout << "--------------------------------------------------------------------------------\n";
 	std::cout << "This is list of folders in your mailbox:\n";
 	for (int i = 0; i < folders.size(); i++) {
-		std::cout << i + 1 << ". " << folders[i].name << '\n';
+		std::cout << '[' << i + 1 << ']' << ". " << folders[i].name << '\n';
 	}
 	//std::cin.ignore();
 	std::string strFolder; int iFolder = 0;
+
 	std::cout << "Which folder do you want to read [ENTER to cancel]: ";
 	std::getline(std::cin, strFolder);
-	if (strFolder == "") return;
+	if (strFolder == "") return 0;
 	else iFolder = atoi(strFolder.c_str());
 	while (iFolder <= 0 || iFolder > folders.size()) {
 		std::cout << "Invalid input. Again [ENTER to cancel]: ";
 		std::getline(std::cin, strFolder);
-		if (strFolder == "") return;
+		if (strFolder == "") return 1;
 		else iFolder = atoi(strFolder.c_str());
 	}
 	if (folders[iFolder - 1].mails.size() == 0) {
+		std::cout << "--------------------------------------------------------------------------------\n";
 		std::cout << "Empty.\n";
+		goto __back_inputFolders;
 	}
 	else {
-		std::cout << "-------------------\n";
+		std::cout << "--------------------------------------------------------------------------------\n";
 		std::cout << "This is list of mails in " << folders[iFolder - 1].name << " folder:\n";
 
 		int n = folders[iFolder - 1].mails.size();
@@ -450,14 +481,14 @@ __back_folders:
 		}
 		int iEmail = 0;
 		std::string strEmail;
-		std::cout << "Which email do you want to read [ENTER to go back]: ";
+		std::cout << "Which email do you want to read [ENTER to cancel]: ";
 		std::getline(std::cin, strEmail);
 		if (strEmail == "") {
 			goto __back_folders;
 		}
 		else iEmail = atoi(strEmail.c_str());
 		while (iEmail <= 0 || iEmail > n) {
-			std::cout << "Invalid input. Again [ENTER to go back]: ";
+			std::cout << "Invalid input. Again [ENTER to cancel]: ";
 			std::getline(std::cin, strEmail);
 			if (strEmail == "") {
 				goto __back_folders;
@@ -518,9 +549,9 @@ __back_folders:
 }
 
 int viewFuncFilterMail() {
-	std::cout << "----------\n";
-	std::cout << "1. New filter\n";
-	std::cout << "2. See all filters\n";
+	std::cout << "--------------------------------------------------------------------------------\n";
+	std::cout << "[1]. New filter\n";
+	std::cout << "[2]. See all filters\n";
 	std::string ans;
 	int cmdLine = 0;
 	std::cout << "Your choice [ENTER to go back]: ";
@@ -539,12 +570,12 @@ int viewFuncFilterMail() {
 	}
 	switch (cmdLine) {
 	case 1: {
-		std::cout << "--------------------";
-		std::cout << "\nNew filter email:\n";
-		std::cout << "1. By sender's address\n";
-		std::cout << "2. By subject\n";
-		std::cout << "3. By content\n";
-		std::cout << "4. To spam\n";
+		std::cout << "--------------------------------------------------------------------------------\n";
+		std::cout << "New filter email:\n";
+		std::cout << "[1]. By sender's address\n";
+		std::cout << "[2]. By subject\n";
+		std::cout << "[3]. By content\n";
+		std::cout << "[4]. To spam\n";
 		std::cout << "Type: ";
 		std::cin >> cmdLine;
 		while (cmdLine <= 0 || cmdLine > 4) {
@@ -650,7 +681,7 @@ bool printFilters(const std::string& user) {
 	std::string temp;
 	while (std::getline(filterFile, temp)) {
 		isEmpty = 0;
-		std::cout << "--------------------\n";
+		std::cout << "--------------------------------------------------------------------------------\n";
 		std::cout << "Filter[" << iMap++ << "]\n";
 		std::stringstream ss{ temp };
 		std::string _temp;
@@ -706,7 +737,7 @@ bool printFilters(const std::string& user) {
 		}
 	}
 	if (isEmpty) std::cout << "There's no filters\n";
-	std::cout << "------------------------------\n";
+	std::cout << "--------------------------------------------------------------------------------\n";
 	filterFile.close();
 	return !isEmpty;
 }
@@ -809,7 +840,7 @@ void MAILCLIENT::filterMail(EMAIL& email, const std::string& user) {
 			std::vector<std::string> keywords;
 			std::stringstream keyss{ line };
 			while (keyss >> line) keywords.push_back(line);
-			
+
 			for (const auto& x : keywords) {
 				if (email.subject.find(x) != -1) {
 					isChecked = true; break;
@@ -836,7 +867,7 @@ void MAILCLIENT::filterMail(EMAIL& email, const std::string& user) {
 		}
 	}
 	//remove email if found
-	if(isChecked) email.delEmailinLocal(user);
+	if (isChecked) email.delEmailinLocal(user);
 }
 
 void MAILCLIENT::filterMail(std::vector<EMAIL>& emails, const std::string& user) {

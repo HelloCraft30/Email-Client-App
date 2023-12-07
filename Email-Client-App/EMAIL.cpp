@@ -66,7 +66,7 @@ bool EMAIL::show() {
 }
 
 void EMAIL::subShow(int i) {
-	std::cout << i << ". ";
+	std::cout<<'['<< i <<']'<< ". ";
 	if (isRead == false) std::cout << "<UNREAD> ";
 	else std::cout << "< READ > ";
 	std::cout << "<" << sender << "> <" << subject << ">\n";
@@ -100,13 +100,16 @@ std::vector<std::string> splitEmails(const std::string& emailString) {
 	return emailAddresses;
 }
 
-void EMAIL::input(const std::string& local) {
+bool EMAIL::input(const std::string& local) {
 	sender = local;
-	std::cout << "This is the email content: (press ENTER to skip if not filled).\n";
-	std::cout << "To: ";
+	std::cout << "\n . This is the email content: [ ENTER ] to skip if not filled \n . . Type \"To: - \" to cancel writing email\n . . . If there's more than one email address, separate by \',\'";
+	std::cout << "\n . . . . In the body, enter continuously and type a separate '.' to end.\n";
+	std::cout << "--------------------------------------------------------------------------------";
+	std::cout << "\nTo: ";
 	std::string temp;
 	//std::cin.ignore();
 	std::getline(std::cin, temp);
+	if (temp == "-") return false;
 	recvTO = splitEmails(temp);
 	std::cout << "CC: ";
 	std::getline(std::cin, temp);
@@ -114,9 +117,9 @@ void EMAIL::input(const std::string& local) {
 	std::cout << "BCC: ";
 	std::getline(std::cin, temp);
 	recvBCC = splitEmails(temp);
-	std::cout << "Subject: ";
+	std::cout << "\nSubject: ";
 	std::getline(std::cin, subject);
-	std::cout << "Enter continuously, type a separate '.' to end.\nBody:\n";
+	std::cout << "\nBody:\n";
 	while (std::getline(std::cin, temp)) {
 		if (temp == ".") break;
 		else body.push_back(temp);
@@ -157,6 +160,10 @@ void EMAIL::input(const std::string& local) {
 			isExist.close();
 		}
 	}
+	std::cout << "--------------------------------------------------------------------------------\n";
+	std::cout << "SUCCESSFULL !\n";
+	std::cout << "--------------------------------------------------------------------------------\n";
+	return true;
 }
 
 void SplitPath(const std::string& filePath, std::string& fileName, std::string& fileExtension) {

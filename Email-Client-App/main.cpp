@@ -14,7 +14,6 @@ void threadFunction() {
 }
 
 int main() {
-	system("pause");
 	std::thread updateThread(threadFunction);
 	// Initialize Winsock
 	WSADATA wsaData;
@@ -22,9 +21,9 @@ int main() {
 		std::cout << "Failed to initialize Winsock.\n";
 		return -1;
 	}
-
+	system("pause");
 	//mail client [IP, SMTP port, POP3 port]
-	client.checkConnection();
+	//client.checkConnection();
 
 	while (true) {
 		switch (client.viewFunction()) {
@@ -32,8 +31,8 @@ int main() {
 			exit(0);
 		} break;
 		case 1: {
-			EMAIL tmp; tmp.input(client.getLocalUser());
-			client.sendMail(tmp);
+			EMAIL tmp; 
+			if(tmp.input(client.getLocalUser())) client.sendMail(tmp);
 			system("pause");
 		} break;
 		case 2: {

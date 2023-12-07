@@ -30,7 +30,7 @@ public:
 	EMAIL();
 	EMAIL(const std::vector<std::string>& buffer);
 	bool show();
-	void input(const std::string& local);
+	bool input(const std::string& local);
 	bool inputF(const std::string& file);
 	void outputF(const std::string& file);
 	void subShow(int i);

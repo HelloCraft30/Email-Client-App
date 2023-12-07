@@ -47,7 +47,7 @@ public:
 
 	void sendMail(const EMAIL& mail);
 	void updateInboxMail();
-	void readMail();
+	int readMail();
 
 	void filterMail(EMAIL& email, const std::string& user);
 	void filterMail(std::vector<EMAIL>& emails, const std::string& user);

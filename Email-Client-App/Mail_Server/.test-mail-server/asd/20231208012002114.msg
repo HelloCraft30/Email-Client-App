@@ -1,12 +1,16 @@
-To: hcmus.edu.vn
-CC:
+To: asdasdad
+CC: asd
 From: hcmus.edu.vn
-Subject: hi again?
+Subject: asda
 --boundary_text
 Content-type: txt
-line: 1
+line: 5
 
-hi
+sdas
+da
+sda
+sd
+
 
 
 --END
