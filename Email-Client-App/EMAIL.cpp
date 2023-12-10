@@ -30,14 +30,24 @@ EMAIL::EMAIL(const std::vector<std::string>& buffer) {
 bool EMAIL::show() {
 	std::cout << "------------------------------\n";
 	std::cout << "To: ";
-	for (const auto& x : recvTO) {
-		std::cout << '<' << x << ">, ";
+	if (recvTO.size() == 1) {
+		std::cout << '<' << recvTO[0] << "> ";
+	}
+	else {
+		for (const auto& x : recvTO) {
+			std::cout << '<' << x << ">, ";
+		}
 	}
 	std::cout << "\b\n";
 
 	std::cout << "CC: ";
-	for (const auto& x : recvCC) {
-		std::cout << '<' << x << ">, ";
+	if (recvCC.size() == 1) {
+		std::cout << '<' << recvCC[0] << "> ";
+	}
+	else {
+		for (const auto& x : recvCC) {
+			std::cout << '<' << x << ">, ";
+		}
 	}
 	std::cout << "\b\n";
 
@@ -66,14 +76,14 @@ bool EMAIL::show() {
 }
 
 void EMAIL::subShow(int i) {
-	std::cout<<'['<< i <<']'<< ". ";
+	std::cout << '[' << i << ']' << ". ";
 	if (isRead == false) std::cout << "<UNREAD> ";
 	else std::cout << "< READ > ";
 	std::cout << "<" << sender << "> <" << subject << ">\n";
 }
 
 void EMAIL::delEmailinLocal(const std::string& user) {
-	std::string _path = "Mail_Client\\" + user + "\\Inbox"+"\\mail_" + std::to_string(keyMap);
+	std::string _path = "Mail_Client\\" + user + "\\Inbox" + "\\mail_" + std::to_string(keyMap);
 	for (const auto& x : attachFiles) {
 		std::string tmp = _path + "\\" + x.fileName;
 		std::remove(tmp.c_str());
@@ -109,16 +119,30 @@ bool EMAIL::input(const std::string& local) {
 	std::string temp;
 	//std::cin.ignore();
 	std::getline(std::cin, temp);
+	if (temp == "") std::cout << "\t<none>\n";
 	if (temp == "-") return false;
 	recvTO = splitEmails(temp);
 	std::cout << "CC: ";
 	std::getline(std::cin, temp);
+	if (temp == "") std::cout << "\t<none>\n";
 	recvCC = splitEmails(temp);
 	std::cout << "BCC: ";
 	std::getline(std::cin, temp);
+	if (temp == "") std::cout << "\t<none>\n";
 	recvBCC = splitEmails(temp);
+
+	if (recvTO.size() + recvCC.size() + recvBCC.size() == 0) {
+		std::cout << "[ERROR]: No destination found\n";
+		std::cout << "[ERROR]: Try again\n";
+		return false;
+	}
+
 	std::cout << "\nSubject: ";
 	std::getline(std::cin, subject);
+	if (temp == "") {
+		std::cout << "\t<no subject>";
+		subject = "<No subject>";
+	}
 	std::cout << "\nBody:\n";
 	while (std::getline(std::cin, temp)) {
 		if (temp == ".") break;

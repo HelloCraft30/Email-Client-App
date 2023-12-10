@@ -99,7 +99,7 @@ bool MAILCLIENT::connectSmtp() {
 	serverAddress.sin_addr.s_addr = inet_addr(hostIP.c_str());
 
 	if (connect(smtpSock, (struct sockaddr*)&serverAddress, sizeof(serverAddress))) {
-		std::cout << "Failed to connect to SMTP protocol\n"<< strerror(errno) << '\n';
+		std::cout << "\nSERVER SMTP: Failed to connect to SMTP protocol\n";
 		closesocket(smtpSock);
 		return false;
 	};
@@ -120,7 +120,7 @@ bool MAILCLIENT::connectPop3() {
 	serverAddress.sin_addr.s_addr = inet_addr(hostIP.c_str());
 
 	if (connect(pop3Sock, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
-		std::cout << "Failed to connect to POP3 protocol\n" << strerror(errno) << '\n';
+		std::cout << "\nSERVER POP3: Failed to connect to POP3 protocol\n";
 		closesocket(pop3Sock);
 		return false;
 	};
@@ -131,30 +131,6 @@ bool MAILCLIENT::connectPop3() {
 
 void MAILCLIENT::disconnect(SOCKET& socket) {
 	send(socket, "QUIT\r\n", sizeof("QUIT\r\n") - 1, 0);
-}
-
-bool MAILCLIENT::checkConnection() {
-
-	bool first = connectSmtp();
-	disconnect(smtpSock);
-	bool second = connectPop3();
-	disconnect(pop3Sock);
-	if (first && second) {
-		std::cout << "Connections: Well done. No errors.\n";
-		std::cout << "-----------------------\n";
-		system("pause");
-		return true;
-	}
-	else {
-		std::cout << "Try again ...\n";
-		std::cout << "-----------------------\n";
-		exit(-1);
-	}
-
-	/*if (connectSmtp() == false) exit(-1);
-	disconnect(smtpSock);
-	if (connectPop3() == false) exit(-1);
-	disconnect(pop3Sock);*/
 }
 
 bool createFolder(const char* str) {
