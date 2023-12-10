@@ -63,3 +63,6 @@ void tmpCopyEmail(const std::string& user, int iMap);
 
 //move an email
 void moveEmail(const std::string& user, const std::string& folder, int keyMap);
+
+//back cursor
+void moveCursorBackward(int Xsteps, int Ysteps);

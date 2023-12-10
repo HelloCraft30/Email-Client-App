@@ -119,16 +119,25 @@ bool EMAIL::input(const std::string& local) {
 	std::string temp;
 	//std::cin.ignore();
 	std::getline(std::cin, temp);
-	if (temp == "") std::cout << "\t<none>\n";
+	if (temp == "") {
+		moveCursorBackward(-10,1);
+		std::cout << " <none>\n";
+	}
 	if (temp == "-") return false;
 	recvTO = splitEmails(temp);
 	std::cout << "CC: ";
 	std::getline(std::cin, temp);
-	if (temp == "") std::cout << "\t<none>\n";
+	if (temp == "") {
+		moveCursorBackward(-10,1);
+		std::cout << " <none>\n";
+	}
 	recvCC = splitEmails(temp);
 	std::cout << "BCC: ";
 	std::getline(std::cin, temp);
-	if (temp == "") std::cout << "\t<none>\n";
+	if (temp == "") {
+		moveCursorBackward(-10, 1);
+		std::cout << " <none>\n";
+	}
 	recvBCC = splitEmails(temp);
 
 	if (recvTO.size() + recvCC.size() + recvBCC.size() == 0) {
@@ -140,7 +149,8 @@ bool EMAIL::input(const std::string& local) {
 	std::cout << "\nSubject: ";
 	std::getline(std::cin, subject);
 	if (temp == "") {
-		std::cout << "\t<no subject>";
+		moveCursorBackward(-10,1);
+		std::cout << " <no subject>\n";
 		subject = "<No subject>";
 	}
 	std::cout << "\nBody:\n";
@@ -361,4 +371,15 @@ void moveEmail(const std::string& user, const std::string& folder, int keyMap) {
 	_path_destination += "\\";
 	_path_destination += "mail_" + std::to_string(nMail);
 	moveFolder(_path_source.c_str(), _path_destination.c_str());
+}
+
+void moveCursorBackward(int Xsteps, int Ysteps) {
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+
+	COORD newCoord;
+	newCoord.X = csbi.dwCursorPosition.X - Xsteps;
+	newCoord.Y = csbi.dwCursorPosition.Y - Ysteps;
+
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), newCoord);
 }

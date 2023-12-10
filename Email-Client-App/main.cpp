@@ -14,7 +14,6 @@ void threadFunction() {
 }
 
 int main() {
-	std::thread updateThread(threadFunction);
 	// Initialize Winsock
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -22,6 +21,7 @@ int main() {
 		return -1;
 	}
 	system("pause");
+	std::thread updateThread(threadFunction);
 	//mail client [IP, SMTP port, POP3 port]
 	//client.checkConnection();
 
