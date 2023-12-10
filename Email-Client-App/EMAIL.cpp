@@ -148,7 +148,7 @@ bool EMAIL::input(const std::string& local) {
 
 	std::cout << "\nSubject: ";
 	std::getline(std::cin, subject);
-	if (temp == "") {
+	if (subject == "") {
 		moveCursorBackward(-10,1);
 		std::cout << " <no subject>\n";
 		subject = "<No subject>";
