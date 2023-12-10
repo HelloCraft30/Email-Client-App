@@ -1,12 +1,12 @@
 To: hcmus.edu.vn
 CC:
 From: hcmus.edu.vn
-Subject: <No subject>
+Subject: hi
 --boundary_text
 Content-type: txt
 line: 1
 
-chao em
+hi
 
 
 --END

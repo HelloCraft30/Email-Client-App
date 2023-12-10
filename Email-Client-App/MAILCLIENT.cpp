@@ -800,7 +800,6 @@ void MAILCLIENT::filterMail(EMAIL& email, const std::string& user) {
 			std::getline(ss, line, '\t');
 			if (isChecked) {
 				moveEmail(user, line, email.keyMap);
-				break;
 			}
 		}
 		else if (line == "Subject:") {
@@ -818,7 +817,6 @@ void MAILCLIENT::filterMail(EMAIL& email, const std::string& user) {
 			std::getline(ss, line, '\t');
 			if (isChecked) {
 				moveEmail(user, line, email.keyMap);
-				break;
 			}
 		}
 		else if (line == "Content:") {
@@ -839,7 +837,6 @@ void MAILCLIENT::filterMail(EMAIL& email, const std::string& user) {
 			std::getline(ss, line, '\t');
 			if (isChecked) {
 				moveEmail(user, line, email.keyMap);
-				break;
 			}
 		}
 		else if (line == "Spam:") {
@@ -869,7 +866,6 @@ void MAILCLIENT::filterMail(EMAIL& email, const std::string& user) {
 			std::getline(ss, line, '\t');
 			if (isChecked) {
 				moveEmail(user, line, email.keyMap);
-				break;
 			}
 		}
 	}
