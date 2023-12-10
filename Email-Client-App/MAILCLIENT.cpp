@@ -258,7 +258,7 @@ void MAILCLIENT::sendMail(const EMAIL& mail) {
 		send(smtpSock, buffer.c_str(), buffer.size(), 0);
 	}
 	send(smtpSock, "\n\n\n", sizeof("\n\n\n") - 1, 0);
-
+	//sending
 	int n = mail.attachFiles.size();
 	std::map<std::string, bool> mp;
 	for (int i = 0; i < n; i++) {
@@ -361,11 +361,13 @@ void MAILCLIENT::updateInboxMail() {
 		for (int i = 0; i < 7; i++) {
 			buffer.push_back(_getline(pop3Sock));
 		}
+		//get body of email
 		int nLines = atoi(buffer[6].substr(buffer[6].find(':') + 2).c_str());
 		for (int i = 0; i < nLines + 2; i++) {
 			buffer.push_back(_getline(pop3Sock));
 		}
 
+		//create email
 		EMAIL mail(buffer);
 
 		//path to mail
@@ -569,7 +571,7 @@ int viewFuncFilterMail() {
 
 }
 
-bool newFilterMail(int cmdLine, const std::string& user) {
+bool newFilterMail(int cmdLine, const std::string& user, const std::vector<MAILFOLDER>& folders) {
 	if (cmdLine / 100 != 1) return false;
 	std::cout << "------------------------------\n";
 	std::string _path_filter = "Mail_client\\" + user + "\\" + "filters.txt";
@@ -586,6 +588,16 @@ bool newFilterMail(int cmdLine, const std::string& user) {
 		std::cout << "To folder: [Please enter an existed folder]\n";
 		std::string folderTo;
 		std::getline(std::cin, folderTo);
+		bool isExisted = false;
+		for (const auto& x : folders) {
+			if (x.name == folderTo) {
+				isExisted = true; break;
+			}
+		}
+		if (!isExisted) {
+			std::cout << "[ERROR]: Not an existed folder\n";
+			return false;
+		}
 		//write to filter.txt
 		filterFile << "From:\t";
 		for (int i = 0; i < senders.size() - 1; i++) {
@@ -604,7 +616,16 @@ bool newFilterMail(int cmdLine, const std::string& user) {
 		while (ss >> inputStr) keys.push_back(inputStr);
 		std::cout << "To folder: [Please enter an existed folder]\n";
 		std::string folderTo;
-		std::getline(std::cin, folderTo);
+		bool isExisted = false;
+		for (const auto& x : folders) {
+			if (x.name == folderTo) {
+				isExisted = true; break;
+			}
+		}
+		if (!isExisted) {
+			std::cout << "[ERROR]: Not an existed folder\n";
+			return false;
+		}
 		filterFile << "Subject:\t";
 		for (int i = 0; i < keys.size() - 1; i++) {
 			filterFile << keys[i] << ' ';
@@ -623,6 +644,16 @@ bool newFilterMail(int cmdLine, const std::string& user) {
 		std::cout << "To folder: [Please enter an existed folder]\n";
 		std::string folderTo;
 		std::getline(std::cin, folderTo);
+		bool isExisted = false;
+		for (const auto& x : folders) {
+			if (x.name == folderTo) {
+				isExisted = true; break;
+			}
+		}
+		if (!isExisted) {
+			std::cout << "[ERROR]: Not an existed folder\n";
+			return false;
+		}
 		filterFile << "Content:\t";
 		for (int i = 0; i < keys.size() - 1; i++) {
 			filterFile << keys[i] << ' ';
@@ -854,7 +885,7 @@ void MAILCLIENT::filterMail(std::vector<EMAIL>& emails, const std::string& user)
 
 void MAILCLIENT::filterMail() {
 	int cmdLine = viewFuncFilterMail();
-	if (newFilterMail(cmdLine, localUser)) {
+	if (newFilterMail(cmdLine, localUser,folders)) {
 		filterMail(folders[0].mails, localUser);
 
 		//update folders
