@@ -181,7 +181,7 @@ bool EMAIL::input(const std::string& local) {
 			}
 			else {
 				//limit size of attach file
-				if (getFileSize(pathAthF) > 1048576) {//3MB
+				if (getFileSize(pathAthF) > 3145728) {//3MB
 					std::cout << "Size limit exceeded.\n";
 					isExist.close();
 					continue;
