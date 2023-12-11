@@ -257,10 +257,13 @@ void MAILCLIENT::sendMail(const EMAIL& mail) {
 		buffer = "\n" + x;
 		send(smtpSock, buffer.c_str(), buffer.size(), 0);
 	}
-	send(smtpSock, "\n\n\n", sizeof("\n\n\n") - 1, 0);
-	//sending
+	send(smtpSock, "\n\n", sizeof("\n\n") - 1, 0);
+	//sending attachments
 	int n = mail.attachFiles.size();
 	std::map<std::string, bool> mp;
+
+	send(smtpSock, "--attachments\n", sizeof("--attachments\n") - 1, 0);
+
 	for (int i = 0; i < n; i++) {
 		std::string fileName, extension;
 		SplitPath(mail.attachFiles[i].filePath, fileName, extension);
@@ -269,8 +272,11 @@ void MAILCLIENT::sendMail(const EMAIL& mail) {
 		buffer = "Name = " + fileName + "," + extension + "," + std::to_string(mail.attachFiles[i].nBytes) + "\n";
 		send(smtpSock, buffer.c_str(), buffer.size(), 0);
 		send(smtpSock, "\n", 1, 0);
+	}
 
+	send(smtpSock, "--attachments--\n", sizeof("--attachments--\n") - 1, 0);
 
+	for (int i = 0; i < n; i++) {
 		std::fstream fileOpen(mail.attachFiles[i].filePath.c_str(), std::ios::in | std::ios::binary);
 
 		int bytes = getFileSize(mail.attachFiles[i].filePath);
@@ -347,6 +353,26 @@ void MAILCLIENT::updateInboxMail() {
 		disconnect(pop3Sock);
 		return;
 	}
+	//get list of mail that maped to each keyMap
+	std::map<int, std::string> _mapToMSG;
+	std::string _mapMSG_line;
+	SEND = "UIDL\r\n";
+	send(pop3Sock, SEND.c_str(), SEND.size(), 0);
+	_getline(pop3Sock, '\n');
+	while (true) {
+		_mapMSG_line = _getline(pop3Sock);
+		if (_mapMSG_line == "") continue;
+		else _mapMSG_line.pop_back();
+		if (_mapMSG_line == ".") break;
+		else {
+			std::stringstream ss{ _mapMSG_line };
+			int keyMap = 0;
+			std::string valMap;
+			ss >> keyMap;
+			ss >> valMap;
+			_mapToMSG[keyMap] = valMap;
+		}
+	}
 
 	std::fstream __setMail(_path_count.c_str(), std::ios::out | std::ios::trunc);
 	__setMail << _nMail; __setMail.close();
@@ -370,43 +396,29 @@ void MAILCLIENT::updateInboxMail() {
 		//create email
 		EMAIL mail(buffer);
 
+		mail.key = _mapToMSG[im];
+
 		//path to mail
 		std::string _path_mail = _path + "\\mail_" + std::to_string(im);
 		mail.keyMap = im;
 		_mkdir(_path_mail.c_str());
-
-		//file extensions things
+		//fix this below
+		bool gate_read_name_attachments = false;
 		while (true) {
 			std::string _line = _getline(pop3Sock);
 			_line.pop_back();
-			if (_line.size() == 0) {
-				_line = _getline(pop3Sock);
-				if (_line.find("--END") != -1) break;
-				else {
-					std::string nameF; int number = 0;
-					extractNameAndNumber(_line, nameF, number);
-
-					mail.attachFiles.push_back(Attachment{ nameF, nameF, number });
-
-					//remove 1 nothing line
-					_line = _getline(pop3Sock);
-
-					//create file extension
-					std::string _pathFile = _path_mail + "\\" + nameF;
-
-					std::fstream createFile(_pathFile.c_str(), std::ios::out | std::ios::binary);
-
-					std::string encodeData = _getline(pop3Sock);
-					std::vector<BYTE> decodedData = base64_decode(encodeData);
-					for (const auto& x : decodedData) createFile << x;
-
-					createFile.close();
-				}
+			if (_line.size() == 0) continue;
+			if (_line.find("--attachments--") != std::string::npos) break;
+			if (_line.find("--attachments") != std::string::npos) {
+				gate_read_name_attachments = true;
+				continue;
 			}
-
+			if (gate_read_name_attachments) {
+				std::string nameF; int number = 0;
+				extractNameAndNumber(_line, nameF, number);
+				mail.attachFiles.push_back(Attachment{ nameF, nameF, number });
+			}
 		}
-		std::string _line = _getline(pop3Sock);
-
 		//content.txt
 		std::string _mailContent = _path_mail + "\\content.txt";
 		mail.outputF(_mailContent);
@@ -420,6 +432,97 @@ void MAILCLIENT::updateInboxMail() {
 		}
 	}
 	disconnect(pop3Sock);
+}
+
+void MAILCLIENT::mail_install_attachment(EMAIL& mail,
+	std::string path = "##",
+	std::vector<int> imails = {}
+) {
+	//startup
+	if (path == "##") {
+		path = "Mail_Client\\" + localUser + "\\Inbox\\mail_" + std::to_string(mail.keyMap);
+	}
+	bool isAllAth = false;
+	int i = 0;
+	if (imails.size() == 0) {
+		isAllAth = true;
+	}
+	//sellect correct mail by pop3 socket
+	connectPop3();
+	char __remove[20]{};
+	recv(pop3Sock, __remove, 20, 0);
+	//read and save in path
+		//get server info
+	std::string SEND = "USER " + localUser + "\r\n";
+	send(pop3Sock, SEND.c_str(), SEND.size(), 0);
+	//S: +OK
+	recv(pop3Sock, __remove, 20, 0);
+	SEND = "PASS " + password + "\r\n";
+	send(pop3Sock, SEND.c_str(), SEND.size(), 0);
+	//S: +OK
+	recv(pop3Sock, __remove, 20, 0);
+
+	//get list of mail that maped to each keyMap
+	std::map<std::string, int> _mapToMSG;
+	std::string _mapMSG_line;
+	SEND = "UIDL\r\n";
+	send(pop3Sock, SEND.c_str(), SEND.size(), 0);
+	_getline(pop3Sock, '\n');
+	while (true) {
+		_mapMSG_line = _getline(pop3Sock);
+		if (_mapMSG_line == "") continue;
+		else _mapMSG_line.pop_back();
+		if (_mapMSG_line == ".") break;
+		else {
+			std::stringstream ss{ _mapMSG_line };
+			int keyMap = 0;
+			std::string valMap;
+			ss >> keyMap;
+			ss >> valMap;
+			_mapToMSG[valMap] = keyMap;
+		}
+	}
+
+	SEND = "RETR " + std::to_string(_mapToMSG[mail.key]) + "\r\n";
+	send(pop3Sock, SEND.c_str(), SEND.size(), 0);
+	int iath = 0;
+	while (true) {
+		std::string _line = _getline(pop3Sock);
+		_line.pop_back();
+		if (_line.find("--attachments--") != std::string::npos) {
+			while (true) {
+				std::string _line = _getline(pop3Sock);
+				_line.pop_back();
+				if (_line.find("--END") != std::string::npos) {
+					disconnect(pop3Sock);
+					return;
+				}
+				if (_line.size() != 0) {
+					if (!isAllAth) {
+						if (i >= imails.size()) {
+							disconnect(pop3Sock);
+							return;
+						}
+						if (imails[i] != iath) {
+							iath++;
+							continue;
+						}
+					}
+					//create file extension
+					std::string _pathFile = path + "\\" + mail.attachFiles[iath].fileName;
+					std::fstream createFile(_pathFile.c_str(), std::ios::out | std::ios::binary);
+
+					std::vector<BYTE> decodedData = base64_decode(_line);
+					for (const auto& x : decodedData) createFile << x;
+
+					createFile.close();
+					iath++; i++;
+				}
+			}
+		}
+	}
+	disconnect(pop3Sock);
+	return;
 }
 
 int MAILCLIENT::readMail() {
@@ -483,45 +586,23 @@ __back_inputFolders:
 				std::string ansStr;
 				std::cin.ignore();
 				std::getline(std::cin, ansStr);
-				std::string __path_to_mail = "Mail_Client\\" + localUser + "\\" + folders[iFolder - 1].name
-					+ "\\" + "mail_" + std::to_string(folders[iFolder - 1].mails[iEmail - 1].keyMap)
-					+ "\\";
 				std::cout << "Where do you want to save: ";
 				std::string _path_save;
 				std::getline(std::cin, _path_save);
 				if (ansStr == "ALL") {
-					for (const auto& _x : folders[iFolder - 1].mails[iEmail - 1].attachFiles) {
-						std::string source = __path_to_mail + _x.fileName;
-						std::string destiny = _path_save + "\\" + _x.fileName;
-						if (copyFile(source, destiny)) {
-							std::cout << "Saved " << _x.fileName << ".\n";
-						}
-						else std::cout << "Failed to save " << _x.fileName << ".\n";
-					}
+					mail_install_attachment(folders[iFolder - 1].mails[iEmail - 1], _path_save);
 				}
 				else {
 					std::stringstream _ss{ ansStr };
-					std::string _tmp;
-					while (_ss >> _tmp) {
-						int key = atoi(_tmp.c_str()) - 1;
-						if (key < 0 || key >= folders[iFolder - 1].mails[iEmail - 1].attachFiles.size()) {
-							std::cout << "Can not read [" << _tmp << "] file" << ".\n";
-						}
-						else {
-							std::string source = __path_to_mail + folders[iFolder - 1].mails[iEmail - 1].attachFiles[key].fileName;
-							std::string destiny = _path_save + "\\" + folders[iFolder - 1].mails[iEmail - 1].attachFiles[key].fileName;
-							if (copyFile(source, destiny)) {
-								std::cout << "Saved " << folders[iFolder - 1].mails[iEmail - 1].attachFiles[key].fileName << ".\n";
-							}
-							else std::cout << "Failed to save " << folders[iFolder - 1].mails[iEmail - 1].attachFiles[key].fileName << ".\n";
-						}
-					}
+					std::vector<int> vt;
+					int tmp = 0;
+					while (_ss >> tmp) vt.push_back(tmp - 1);
+					mail_install_attachment(folders[iFolder - 1].mails[iEmail - 1], _path_save, vt);
 				}
 			}
 		}
 		folders[iFolder - 1].saveLocal(localUser);
 	}
-
 
 	system("pause");
 }
@@ -881,7 +962,7 @@ void MAILCLIENT::filterMail(std::vector<EMAIL>& emails, const std::string& user)
 
 void MAILCLIENT::filterMail() {
 	int cmdLine = viewFuncFilterMail();
-	if (newFilterMail(cmdLine, localUser,folders)) {
+	if (newFilterMail(cmdLine, localUser, folders)) {
 		filterMail(folders[0].mails, localUser);
 
 		//update folders

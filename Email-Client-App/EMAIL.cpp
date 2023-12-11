@@ -3,6 +3,7 @@
 EMAIL::EMAIL() {
 	isRead = 0;
 	keyMap = 0;
+	key = "";
 }
 
 EMAIL::EMAIL(const std::vector<std::string>& buffer) {
@@ -25,6 +26,7 @@ EMAIL::EMAIL(const std::vector<std::string>& buffer) {
 	if (recvTO.size()) recvTO[recvTO.size() - 1].pop_back();
 	if (recvCC.size()) recvCC[recvCC.size() - 1].pop_back();
 	if (recvBCC.size()) recvBCC[recvBCC.size() - 1].pop_back();
+	key = "";
 }
 
 bool EMAIL::show() {
@@ -69,7 +71,7 @@ bool EMAIL::show() {
 		int n = attachFiles.size();
 		std::cout << n << " files attached.\n";
 		for (int i = 0; i < n; i++) {
-			std::cout << i + 1 << ". " << attachFiles[i].fileName << '\n';
+			std::cout<<'[' << i + 1 <<']'<< ". " << attachFiles[i].fileName << '\n';
 		}
 		return true;
 	}
@@ -84,10 +86,6 @@ void EMAIL::subShow(int i) {
 
 void EMAIL::delEmailinLocal(const std::string& user) {
 	std::string _path = "Mail_Client\\" + user + "\\Inbox" + "\\mail_" + std::to_string(keyMap);
-	for (const auto& x : attachFiles) {
-		std::string tmp = _path + "\\" + x.fileName;
-		std::remove(tmp.c_str());
-	}
 	std::string _path_content = "Mail_Client\\" + user + "\\Inbox" + "\\mail_" + std::to_string(keyMap) + "\\" + "content.txt";
 	std::remove(_path_content.c_str());
 	RemoveDirectoryA(_path.c_str());
@@ -232,6 +230,7 @@ bool EMAIL::inputF(const std::string& file) {
 	}
 	fileOpen >> isRead;
 	fileOpen.ignore();
+	std::getline(fileOpen, key);
 	std::getline(fileOpen, sender);
 	std::string temp;
 	std::getline(fileOpen, temp);
@@ -275,6 +274,7 @@ void EMAIL::outputF(const std::string& file) {
 		return;
 	}
 	fileOpen << isRead << '\n';
+	fileOpen << key << '\n';
 	fileOpen << sender << '\n';
 	for (const auto& x : recvTO) fileOpen << x << '\t';
 	fileOpen << '\n';
@@ -345,14 +345,6 @@ void tmpCopyEmail(const std::string& user, int iMap) {
 	std::string contentDestinationPath = tmpPath + "\\content.txt";
 	std::string contentSourcePath = _path + "\\content.txt";
 	copyFile(contentSourcePath, contentDestinationPath);
-	EMAIL email;
-	email.inputF(contentSourcePath);
-	//copy attachments
-	for (const auto& x : email.attachFiles) {
-		contentDestinationPath = tmpPath + "\\" + x.fileName;
-		contentSourcePath = _path + "\\" + x.fileName;
-		copyFile(contentSourcePath, contentDestinationPath);
-	}
 }
 
 void moveEmail(const std::string& user, const std::string& folder, int keyMap) {

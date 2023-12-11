@@ -23,8 +23,6 @@ int main() {
 	system("pause");
 	std::thread updateThread(threadFunction);
 	//mail client [IP, SMTP port, POP3 port]
-	//client.checkConnection();
-
 	while (true) {
 		switch (client.viewFunction()) {
 		case 0: {
@@ -40,6 +38,9 @@ int main() {
 		} break;
 		case 3: {
 			client.filterMail();
+		} break;
+		case 9: {
+			client.updateInboxMail();
 		} break;
 		}
 	}

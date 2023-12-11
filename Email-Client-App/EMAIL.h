@@ -27,6 +27,7 @@ public:
 	bool isRead;
 	std::vector<Attachment> attachFiles;
 	int keyMap;
+	std::string key;
 	EMAIL();
 	EMAIL(const std::vector<std::string>& buffer);
 	bool show();

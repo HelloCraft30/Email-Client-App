@@ -5,7 +5,7 @@
 #include "pugixml/src/pugixml.hpp"
 #pragma comment(lib, "ws2_32.lib")
 
-class MAILCLIENT{
+class MAILCLIENT {
 private:
 	void readConfigFromXML();
 	std::string hostIP;
@@ -23,8 +23,6 @@ private:
 	int autoLoad;
 public:
 
-	bool checkConnection();
-
 	//set get functions
 	std::string getHostIp();
 	int getSMTPp();
@@ -32,7 +30,7 @@ public:
 	std::string getLocalUser();
 	std::string getPassword();
 	int getAutoload();
-	
+
 	//config
 	void configClient(
 		const std::string& hostip,
@@ -48,6 +46,8 @@ public:
 	void sendMail(const EMAIL& mail);
 	void updateInboxMail();
 	int readMail();
+
+	void mail_install_attachment(EMAIL& mail, std::string path, std::vector<int> imails);
 
 	void filterMail(EMAIL& email, const std::string& user);
 	void filterMail(std::vector<EMAIL>& emails, const std::string& user);
