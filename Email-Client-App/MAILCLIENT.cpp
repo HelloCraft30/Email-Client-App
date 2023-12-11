@@ -45,8 +45,10 @@ void MAILCLIENT::configClient(
 MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 	//default values
 	//startup
+	bool isEnd = false;
 	if (_mkdir("Mail_Client") == 0) {
 		std::cout << "Created folder by default\n";
+		isEnd = true;
 	};
 	//default
 	hostIP = IP;
@@ -58,6 +60,11 @@ MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 	writeConfigToXML();
 
 	readConfigFromXML();
+	if (isEnd) {
+		std::cout << "Please edit config.xml to change account\nCome back later\n";
+		system("pause");
+		exit(0);
+	}
 	smtpSock = socket(AF_INET, SOCK_STREAM, 0);
 	pop3Sock = socket(AF_INET, SOCK_STREAM, 0);
 	makeSpace();
