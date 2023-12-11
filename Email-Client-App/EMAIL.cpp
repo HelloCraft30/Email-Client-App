@@ -165,31 +165,33 @@ bool EMAIL::input(const std::string& local) {
 		std::cin >> num;
 		std::cin.ignore();
 		for (int i = 1; i <= num; i++) {
+			_reset_add_attachfile:
 			std::cout << "Path of file " << i << ":\n";
 			std::string pathAthF;
 			std::getline(std::cin, pathAthF);
 			if (pathAthF.find('.') == -1) {
 				std::cout << "Invalid file path.\n";
-				continue;
+				goto _reset_add_attachfile;
 			}
 			std::fstream isExist(pathAthF.c_str(), std::ios::in);
 			if (!isExist) {
 				std::cout << "Invalid file path.\n";
 				isExist.close();
+				goto _reset_add_attachfile;
 			}
 			else {
 				//limit size of attach file
 				if (getFileSize(pathAthF) > 3145728) {//3MB
 					std::cout << "Size limit exceeded.\n";
 					isExist.close();
-					continue;
+					goto _reset_add_attachfile;
 				}
 				std::string nameFile, extension;
 				SplitPath(pathAthF, nameFile, extension);
 				Attachment tmpAthF{ pathAthF, nameFile, getFileSize(pathAthF) };
 				attachFiles.push_back(tmpAthF);
+				isExist.close();
 			}
-			isExist.close();
 		}
 	}
 	std::cout << "--------------------------------------------------------------------------------\n";
