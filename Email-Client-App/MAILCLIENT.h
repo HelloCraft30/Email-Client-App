@@ -43,7 +43,7 @@ public:
 
 	MAILCLIENT(std::string IP, int smtp, int pop3);
 
-	void sendMail(const EMAIL& mail);
+	void sendMail( EMAIL& mail);
 	void updateInboxMail();
 	int readMail();
 

@@ -261,7 +261,7 @@ bool EMAIL::inputF(const std::string& file) {
 	}
 	attachFiles.resize(0);
 	while (std::getline(fileOpen, temp)) {
-		attachFiles.push_back(Attachment{ "N/A", temp });
+		attachFiles.push_back(Attachment{ "N/A", temp});
 	}
 	fileOpen.close();
 	return true;

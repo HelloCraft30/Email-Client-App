@@ -203,7 +203,7 @@ int MAILCLIENT::viewFunction() {
 	return result;
 }
 
-void MAILCLIENT::sendMail(const EMAIL& mail) {
+void MAILCLIENT::sendMail( EMAIL& mail) {
 	std::string buffer = "EHLO" + hostIP + "\r\n";
 	connectSmtp();
 
@@ -277,15 +277,31 @@ void MAILCLIENT::sendMail(const EMAIL& mail) {
 	send(smtpSock, "--attachments--\n", sizeof("--attachments--\n") - 1, 0);
 
 	for (int i = 0; i < n; i++) {
+		////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////
+		int bytes = mail.attachFiles[i].nBytes;
+		//read file
 		std::fstream fileOpen(mail.attachFiles[i].filePath.c_str(), std::ios::in | std::ios::binary);
-
-		int bytes = getFileSize(mail.attachFiles[i].filePath);
-
 		std::vector<BYTE> fileData(bytes);
 		fileOpen.read(reinterpret_cast<char*>(&fileData[0]), bytes);
 		fileOpen.close();
+		//encode
 		std::string encodedData = base64_encode(&fileData[0], fileData.size());
-		send(smtpSock, encodedData.c_str(), encodedData.size(), 0);
+		std::string sizeStr = std::to_string(encodedData.size()) +"\n";
+		send(smtpSock, sizeStr.c_str(), sizeStr.size(), 0);
+	//debug	
+		//std::cout << encodedData << '\n';
+		//send to smtp
+		int nData = encodedData.size();
+		int offset = 0;
+		int chunk = 10000;
+		while (nData > offset) {
+			int canSend = min(chunk, nData-offset);
+			int sent = send(smtpSock, encodedData.c_str()+offset, canSend, 0);
+			send(smtpSock, "\n", 1, 0);
+			offset += sent;
+		}
 
 		send(smtpSock, "\n\r\n", sizeof("\n\r\n") - 1, 0);
 	}
@@ -508,11 +524,22 @@ void MAILCLIENT::mail_install_attachment(EMAIL& mail,
 							continue;
 						}
 					}
+					///////////////////////////////////////////////////////////
+					///////////////////////////////////////////////////////////
+					///////////////////////////////////////////////////////////
+					///////////////////////////////////////////////////////////
 					//create file extension
+					std::string encodedData;
+					while (true) {
+						_line = _getline(pop3Sock);
+						_line.pop_back();
+						if (_line.size() == 0) break;
+						else encodedData += _line;
+					}
 					std::string _pathFile = path + "\\" + mail.attachFiles[iath].fileName;
 					std::fstream createFile(_pathFile.c_str(), std::ios::out | std::ios::binary);
 
-					std::vector<BYTE> decodedData = base64_decode(_line);
+					std::vector<BYTE> decodedData = base64_decode(encodedData);
 					for (const auto& x : decodedData) createFile << x;
 
 					createFile.close();
