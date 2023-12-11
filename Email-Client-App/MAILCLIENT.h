@@ -54,5 +54,6 @@ public:
 	void filterMail();
 
 	int viewFunction();
+	void writeConfigToXML();
 };
 

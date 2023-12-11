@@ -44,16 +44,24 @@ void MAILCLIENT::configClient(
 
 MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 	//default values
+	//startup
+	if (_mkdir("Mail_Client") == 0) {
+		std::cout << "Created folder by default\n";
+	};
+	//default
 	hostIP = IP;
 	SMTPp = smtp;
 	POP3p = pop3;
 	localUser = "hcmus.edu.vn";
 	password = "123";
+	autoLoad = 10;
+	writeConfigToXML();
+
 	readConfigFromXML();
 	smtpSock = socket(AF_INET, SOCK_STREAM, 0);
 	pop3Sock = socket(AF_INET, SOCK_STREAM, 0);
 	makeSpace();
-	std::string txtFolder = "Mail_client\\" + localUser + "\\folders.txt";
+	std::string txtFolder = "Mail_Client\\" + localUser + "\\folders.txt";
 	std::fstream fFolder(txtFolder.c_str(), std::ios::in);
 
 	int nFolder = 0;
@@ -70,11 +78,11 @@ MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 
 	for (auto& a : folders) {
 		if (!a.makeSpace(localUser)) {
-			std::string _path = "Mail_client\\" + localUser + "\\" + a.name + "\\count.txt";
+			std::string _path = "Mail_Client\\" + localUser + "\\" + a.name + "\\count.txt";
 			std::fstream _nMailf(_path.c_str(), std::ios::in);
 			int nMail = 0; _nMailf >> nMail; _nMailf.close();
 			for (int i = 1; i <= nMail; i++) {
-				std::string _path_mail = "Mail_client\\" + localUser + "\\" + a.name + "\\mail_" + std::to_string(i) + "\\content.txt";
+				std::string _path_mail = "Mail_Client\\" + localUser + "\\" + a.name + "\\mail_" + std::to_string(i) + "\\content.txt";
 				EMAIL mail;
 				if (mail.inputF(_path_mail)) a.addMail(mail);
 			}
@@ -82,7 +90,7 @@ MAILCLIENT::MAILCLIENT(std::string IP, int smtp, int pop3) {
 	}
 
 	//filter file.txt create
-	std::string _path_filter = "Mail_client\\" + localUser + "\\" + "filters.txt";
+	std::string _path_filter = "Mail_Client\\" + localUser + "\\" + "filters.txt";
 	std::fstream filterF(_path_filter.c_str(), std::ios::app | std::ios::out);
 	filterF.close();
 }
@@ -277,9 +285,6 @@ void MAILCLIENT::sendMail( EMAIL& mail) {
 	send(smtpSock, "--attachments--\n", sizeof("--attachments--\n") - 1, 0);
 
 	for (int i = 0; i < n; i++) {
-		////////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////
 		int bytes = mail.attachFiles[i].nBytes;
 		//read file
 		std::fstream fileOpen(mail.attachFiles[i].filePath.c_str(), std::ios::in | std::ios::binary);
@@ -290,8 +295,6 @@ void MAILCLIENT::sendMail( EMAIL& mail) {
 		std::string encodedData = base64_encode(&fileData[0], fileData.size());
 		std::string sizeStr = std::to_string(encodedData.size()) +"\n";
 		send(smtpSock, sizeStr.c_str(), sizeStr.size(), 0);
-	//debug	
-		//std::cout << encodedData << '\n';
 		//send to smtp
 		int nData = encodedData.size();
 		int offset = 0;
@@ -524,11 +527,6 @@ void MAILCLIENT::mail_install_attachment(EMAIL& mail,
 							continue;
 						}
 					}
-					///////////////////////////////////////////////////////////
-					///////////////////////////////////////////////////////////
-					///////////////////////////////////////////////////////////
-					///////////////////////////////////////////////////////////
-					//create file extension
 					std::string encodedData;
 					while (true) {
 						_line = _getline(pop3Sock);
@@ -1006,4 +1004,28 @@ void MAILCLIENT::filterMail() {
 		}
 	}
 	system("pause");
+}
+
+void MAILCLIENT::writeConfigToXML() {
+	pugi::xml_document doc;
+	pugi::xml_node userNode = doc.append_child("config_user");
+
+	userNode.append_child("localUser").text().set(getLocalUser().c_str());
+	userNode.append_child("password").text().set(getPassword().c_str());
+	userNode.append_child("ip").text().set(getHostIp().c_str());
+	userNode.append_child("smtp").text().set(getSMTPp());
+	userNode.append_child("pop3").text().set(getPOP3p());
+	userNode.append_child("autoload").text().set(getAutoload());
+
+	std::string path;
+	path = "Mail_Client/config.xml";
+
+	std::fstream file(path.c_str());
+	if (!file.good()) {
+		if (doc.save_file(path.c_str())) {
+			std::cout << "Created config.xml by default\n";
+			std::cout << "-----------------------------\n";
+		}
+	}
+	file.close();
 }

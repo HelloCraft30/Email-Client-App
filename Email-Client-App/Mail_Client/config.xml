@@ -5,5 +5,5 @@
 	<ip>127.0.0.1</ip>
 	<smtp>2225</smtp>
 	<pop3>3335</pop3>
-	<autoload>2</autoload>
+	<autoload>10</autoload>
 </config_user>
