@@ -30,7 +30,7 @@ EMAIL::EMAIL(const std::vector<std::string>& buffer) {
 }
 
 bool EMAIL::show() {
-	std::cout << "------------------------------\n";
+	std::cout << "--------------------------------------------------------------------------------\n";
 	std::cout << "To: ";
 	if (recvTO.size() == 1) {
 		std::cout << '<' << recvTO[0] << "> ";

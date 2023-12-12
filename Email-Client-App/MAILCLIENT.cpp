@@ -211,14 +211,14 @@ int MAILCLIENT::viewFunction() {
 	std::cout << "[2]. Read email\n";
 	std::cout << "[3]. Filter\n";
 	std::cout << "[0]. Quit\n\n";
-	std::cout << "Your choice: ";
+	std::cout << "> Input: ";
 	int result = 0;
 	std::cin >> result;
 	std::cin.ignore();
 	return result;
 }
 
-void MAILCLIENT::sendMail( EMAIL& mail) {
+void MAILCLIENT::sendMail(EMAIL& mail) {
 	std::string buffer = "EHLO" + hostIP + "\r\n";
 	connectSmtp();
 
@@ -300,15 +300,15 @@ void MAILCLIENT::sendMail( EMAIL& mail) {
 		fileOpen.close();
 		//encode
 		std::string encodedData = base64_encode(&fileData[0], fileData.size());
-		std::string sizeStr = std::to_string(encodedData.size()) +"\n";
+		std::string sizeStr = std::to_string(encodedData.size()) + "\n";
 		send(smtpSock, sizeStr.c_str(), sizeStr.size(), 0);
 		//send to smtp
 		int nData = encodedData.size();
 		int offset = 0;
 		int chunk = 10000;
 		while (nData > offset) {
-			int canSend = min(chunk, nData-offset);
-			int sent = send(smtpSock, encodedData.c_str()+offset, canSend, 0);
+			int canSend = min(chunk, nData - offset);
+			int sent = send(smtpSock, encodedData.c_str() + offset, canSend, 0);
 			send(smtpSock, "\n", 1, 0);
 			offset += sent;
 		}
@@ -571,12 +571,12 @@ __back_inputFolders:
 	//std::cin.ignore();
 	std::string strFolder; int iFolder = 0;
 
-	std::cout << "Which folder do you want to read [ENTER to cancel]: ";
+	std::cout << "Which folder do you want to read [ENTER to cancel]:\n> Input: ";
 	std::getline(std::cin, strFolder);
 	if (strFolder == "") return 0;
 	else iFolder = atoi(strFolder.c_str());
 	while (iFolder <= 0 || iFolder > folders.size()) {
-		std::cout << "Invalid input. Again [ENTER to cancel]: ";
+		std::cout << "Invalid input. Again [ENTER to cancel]:\n> Input: ";
 		std::getline(std::cin, strFolder);
 		if (strFolder == "") return 1;
 		else iFolder = atoi(strFolder.c_str());
@@ -597,14 +597,14 @@ __back_inputFolders:
 		}
 		int iEmail = 0;
 		std::string strEmail;
-		std::cout << "Which email do you want to read [ENTER to cancel]: ";
+		std::cout << "Which email do you want to read [ENTER to cancel]:\n> Input:  ";
 		std::getline(std::cin, strEmail);
 		if (strEmail == "") {
 			goto __back_folders;
 		}
 		else iEmail = atoi(strEmail.c_str());
 		while (iEmail <= 0 || iEmail > n) {
-			std::cout << "Invalid input. Again [ENTER to cancel]: ";
+			std::cout << "Invalid input. Again [ENTER to cancel]:\n> Input: ";
 			std::getline(std::cin, strEmail);
 			if (strEmail == "") {
 				goto __back_folders;
@@ -613,20 +613,35 @@ __back_inputFolders:
 		}
 		folders[iFolder - 1].mails[iEmail - 1].isRead = 1;
 		if (folders[iFolder - 1].mails[iEmail - 1].show()) {
-			std::cout << "Do you want to save attach files?\n[1] YES [0] NO . Input: ";
+			std::cout << "--------------------------------------------------------------------------------\n";
+			std::cout << "Do you want to save attach files?\n[1] YES [0] NO\n> Input: ";
 			int ans = 0;
 			std::cin >> ans;
 			if (ans) {
-				std::cout << "Which file?\n[\"ALL\" to select all files]\n[\"x y z..\" to select file x, y, z]: ";
+				std::cout << "--------------------------------------------------------------------------------\n";
+				std::cout << "Which file?\n[\"ALL\" to select all files]\n[\"x y z..\" to select file x, y, z]:\n> Input: ";
 				std::string ansStr;
 				std::cin.ignore();
+			__retry_ansStr:
 				std::getline(std::cin, ansStr);
-				std::cout << "Where do you want to save: ";
+				bool isValidAns = true;
+				for (const auto& x : ansStr) {
+					if (x != ' ' && !isdigit(x)) {
+						isValidAns = false;
+						break;
+					}
+				}
+				if (!(ansStr == "ALL" || isValidAns)) {
+					std::cout << "[ERROR]: Invalid input\n";
+					std::cout << "Try again:\n> Input: ";
+					goto __retry_ansStr;
+				}
+				std::cout << "Where do you want to save:\n> Input: ";
 				std::string _path_save;
 				std::getline(std::cin, _path_save);
 				while (!isValidFolder(_path_save)) {
 					std::cout << "[ERROR]: Invalid path\n";
-					std::cout << "Try again: ";
+					std::cout << "Try again:\n> Input: ";
 					std::getline(std::cin, _path_save);
 				}
 				if (ansStr == "ALL") {
@@ -637,6 +652,10 @@ __back_inputFolders:
 					std::vector<int> vt;
 					int tmp = 0;
 					while (_ss >> tmp) vt.push_back(tmp - 1);
+					for (auto& x : vt) {
+						if (!(x >= folders[iFolder - 1].mails[iEmail - 1].attachFiles.size()
+							|| x < 0)) std::cout << "[Accepted] [" << x + 1 << "] input attachment\n";
+					}
 					mail_install_attachment(folders[iFolder - 1].mails[iEmail - 1], _path_save, vt);
 				}
 			}

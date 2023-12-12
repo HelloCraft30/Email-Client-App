@@ -17,7 +17,7 @@ int main() {
 	// Initialize Winsock
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-		std::cout << "Failed to initialize Winsock.\n";
+		std::cout << "[ERROR]: Failed to initialize Winsock.\n";
 		return -1;
 	}
 	system("pause");
