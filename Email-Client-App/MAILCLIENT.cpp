@@ -442,6 +442,9 @@ void MAILCLIENT::updateInboxMail() {
 			if (gate_read_name_attachments) {
 				std::string nameF; int number = 0;
 				extractNameAndNumber(_line, nameF, number);
+				std::cout << nameF << '\n';
+				std::cout << _line << '\n';
+				system("pause");
 				mail.attachFiles.push_back(Attachment{ nameF, nameF, number });
 			}
 		}
