@@ -624,6 +624,11 @@ __back_inputFolders:
 				std::cout << "Where do you want to save: ";
 				std::string _path_save;
 				std::getline(std::cin, _path_save);
+				while (!isValidFolder(_path_save)) {
+					std::cout << "[ERROR]: Invalid path\n";
+					std::cout << "Try again: ";
+					std::getline(std::cin, _path_save);
+				}
 				if (ansStr == "ALL") {
 					mail_install_attachment(folders[iFolder - 1].mails[iEmail - 1], _path_save);
 				}

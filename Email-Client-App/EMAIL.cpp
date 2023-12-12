@@ -71,7 +71,7 @@ bool EMAIL::show() {
 		int n = attachFiles.size();
 		std::cout << n << " files attached.\n";
 		for (int i = 0; i < n; i++) {
-			std::cout<<'[' << i + 1 <<']'<< ". " << attachFiles[i].fileName << '\n';
+			std::cout << '[' << i + 1 << ']' << ". " << attachFiles[i].fileName << '\n';
 		}
 		return true;
 	}
@@ -118,7 +118,7 @@ bool EMAIL::input(const std::string& local) {
 	//std::cin.ignore();
 	std::getline(std::cin, temp);
 	if (temp == "") {
-		moveCursorBackward(-10,1);
+		moveCursorBackward(-10, 1);
 		std::cout << " <none>\n";
 	}
 	if (temp == "-") return false;
@@ -126,7 +126,7 @@ bool EMAIL::input(const std::string& local) {
 	std::cout << "CC: ";
 	std::getline(std::cin, temp);
 	if (temp == "") {
-		moveCursorBackward(-10,1);
+		moveCursorBackward(-10, 1);
 		std::cout << " <none>\n";
 	}
 	recvCC = splitEmails(temp);
@@ -147,7 +147,7 @@ bool EMAIL::input(const std::string& local) {
 	std::cout << "\nSubject: ";
 	std::getline(std::cin, subject);
 	if (subject == "") {
-		moveCursorBackward(-10,1);
+		moveCursorBackward(-10, 1);
 		std::cout << " <no subject>\n";
 		subject = "<No subject>";
 	}
@@ -165,7 +165,7 @@ bool EMAIL::input(const std::string& local) {
 		std::cin >> num;
 		std::cin.ignore();
 		for (int i = 1; i <= num; i++) {
-			_reset_add_attachfile:
+		_reset_add_attachfile:
 			std::cout << "Path of file " << i << ":\n";
 			std::string pathAthF;
 			std::getline(std::cin, pathAthF);
@@ -261,7 +261,7 @@ bool EMAIL::inputF(const std::string& file) {
 	}
 	attachFiles.resize(0);
 	while (std::getline(fileOpen, temp)) {
-		attachFiles.push_back(Attachment{ "N/A", temp});
+		attachFiles.push_back(Attachment{ "N/A", temp });
 	}
 	fileOpen.close();
 	return true;
@@ -373,4 +373,13 @@ void moveCursorBackward(int Xsteps, int Ysteps) {
 	newCoord.Y = csbi.dwCursorPosition.Y - Ysteps;
 
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), newCoord);
+}
+
+//valid path folder
+bool isValidFolder(const std::string& name) {
+	struct stat sb;
+	if (stat(name.c_str(), &sb) == 0)
+		return true;
+	else
+		return false;
 }

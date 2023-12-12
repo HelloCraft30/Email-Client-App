@@ -9,6 +9,7 @@
 #include <chrono>
 #include <direct.h>
 #include <Windows.h>
+#include <sys/stat.h>
 
 struct Attachment {
 	std::string filePath;
@@ -68,3 +69,6 @@ void moveEmail(const std::string& user, const std::string& folder, int keyMap);
 
 //back cursor
 void moveCursorBackward(int Xsteps, int Ysteps);
+
+//valid path folder
+bool isValidFolder(const std::string& name);
