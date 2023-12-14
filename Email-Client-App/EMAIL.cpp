@@ -293,14 +293,13 @@ void EMAIL::outputF(const std::string& file) {
 
 
 void extractNameAndNumber(const std::string& input, std::string& name, int& number) {
-	std::istringstream iss(input);
-	name = input.substr(input.find_last_of(" "));
-	std::string _1 = name.substr(1, name.find_first_of(",")); _1.pop_back();
-	name.erase(0, name.find_first_of(",") + 1);
-	std::string _2 = name.substr(0, name.find_first_of(","));
-	name.erase(0, name.find_first_of(",") + 1);
-	number = atoi(name.c_str());
-	name = _1 + _2;
+	std::string a = input.substr(input.find("=") + 1);
+	std::stringstream ss{ a };
+	std::string _name, _extension;
+	std::getline(ss, _name, ',');
+	std::getline(ss, _extension, ',');
+	ss >> number;
+	name = _name + _extension;
 }
 
 bool copyFile(const std::string& sourcePath, const std::string& destinationPath) {
