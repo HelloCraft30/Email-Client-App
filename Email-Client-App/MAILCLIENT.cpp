@@ -284,7 +284,7 @@ void MAILCLIENT::sendMail(EMAIL& mail) {
 		SplitPath(mail.attachFiles[i].filePath, fileName, extension);
 		if (mp[mail.attachFiles[i].filePath] == 0) mp[mail.attachFiles[i].filePath] = 1;
 		else continue;
-		buffer = "Name = " + fileName + "," + extension + "," + std::to_string(mail.attachFiles[i].nBytes) + "\n";
+		buffer = "Name = " + fileName  + "," + std::to_string(mail.attachFiles[i].nBytes) + "\n";
 		send(smtpSock, buffer.c_str(), buffer.size(), 0);
 		send(smtpSock, "\n", 1, 0);
 	}
@@ -399,7 +399,6 @@ void MAILCLIENT::updateInboxMail() {
 			_mapToMSG[keyMap] = valMap;
 		}
 	}
-
 	std::fstream __setMail(_path_count.c_str(), std::ios::out | std::ios::trunc);
 	__setMail << _nMail; __setMail.close();
 
@@ -411,26 +410,28 @@ void MAILCLIENT::updateInboxMail() {
 		//ignore first line
 		_getline(pop3Sock);
 		for (int i = 0; i < 7; i++) {
-			buffer.push_back(_getline(pop3Sock));
+			std::string _a = _getline(pop3Sock);
+			buffer.push_back(_a);
 		}
 		//get body of email
 		int nLines = atoi(buffer[6].substr(buffer[6].find(':') + 2).c_str());
 		for (int i = 0; i < nLines + 2; i++) {
-			buffer.push_back(_getline(pop3Sock));
+			std::string _a = _getline(pop3Sock);
+			buffer.push_back(_a);
 		}
-
 		//create email
 		EMAIL mail(buffer);
 
 		mail.key = _mapToMSG[im];
-
 		//path to mail
 		std::string _path_mail = _path + "\\mail_" + std::to_string(im);
 		mail.keyMap = im;
 		_mkdir(_path_mail.c_str());
 		//fix this below
 		bool gate_read_name_attachments = false;
+
 		while (true) {
+
 			std::string _line = _getline(pop3Sock);
 			_line.pop_back();
 			if (_line.size() == 0) continue;
@@ -445,17 +446,24 @@ void MAILCLIENT::updateInboxMail() {
 				mail.attachFiles.push_back(Attachment{ nameF, nameF, number });
 			}
 		}
+
 		//content.txt
 		std::string _mailContent = _path_mail + "\\content.txt";
 		mail.outputF(_mailContent);
 		folders[0].addMail(mail);
-
 		filterMail(mail, localUser);
 
 		//update folders
 		for (auto& a : folders) {
 			a.updateMails(localUser);
 		}
+
+		char chr = ' ';
+		recv(pop3Sock, &chr, 1, 0);
+		while (chr != '.') {
+			recv(pop3Sock, &chr, 1, 0);
+		} _getline(pop3Sock);
+
 	}
 	disconnect(pop3Sock);
 }
@@ -720,6 +728,12 @@ bool newFilterMail(int cmdLine, const std::string& user, const std::vector<MAILF
 		std::cout << "From: [Enter all senders | separated by ','\n";
 		std::string inputStr;
 		std::getline(std::cin, inputStr);
+		while (inputStr.size() == 0) {
+			std::cout << "[ERROR]: no input\nTry again\n";
+			std::cout << "------------------------------\n";
+			std::cout << "From: [Enter all senders | separated by ','\n";
+			std::getline(std::cin, inputStr);
+		}
 		std::vector<std::string> senders = splitEmails(inputStr);
 
 		std::cout << "To folder: [Please enter an existed folder]\n";
@@ -749,10 +763,17 @@ bool newFilterMail(int cmdLine, const std::string& user, const std::vector<MAILF
 		std::vector<std::string> keys;
 		std::string inputStr;
 		std::getline(std::cin, inputStr);
+		while (inputStr.size() == 0) {
+			std::cout << "[ERROR]: no input\nTry again\n";
+			std::cout << "------------------------------\n";
+			std::cout << "Subject's keyword: [Enter all keywords | separated by 'SPACE'\n";
+			std::getline(std::cin, inputStr);
+		}
 		std::stringstream ss{ inputStr };
 		while (ss >> inputStr) keys.push_back(inputStr);
 		std::cout << "To folder: [Please enter an existed folder]\n";
 		std::string folderTo;
+		std::getline(std::cin, folderTo);
 		bool isExisted = false;
 		for (const auto& x : folders) {
 			if (x.name == folderTo) {
@@ -776,6 +797,12 @@ bool newFilterMail(int cmdLine, const std::string& user, const std::vector<MAILF
 		std::vector<std::string> keys;
 		std::string inputStr;
 		std::getline(std::cin, inputStr);
+		while (inputStr.size() == 0) {
+			std::cout << "[ERROR]: no input\nTry again\n";
+			std::cout << "------------------------------\n";
+			std::cout << "Content's keyword: [Enter all keywords | separated by 'SPACE'\n";
+			std::getline(std::cin, inputStr);
+		}
 		std::stringstream ss{ inputStr };
 		while (ss >> inputStr) keys.push_back(inputStr);
 		std::cout << "To folder: [Please enter an existed folder]\n";
@@ -804,6 +831,12 @@ bool newFilterMail(int cmdLine, const std::string& user, const std::vector<MAILF
 		std::vector<std::string> keys;
 		std::string inputStr;
 		std::getline(std::cin, inputStr);
+		while (inputStr.size() == 0) {
+			std::cout << "[ERROR]: no input\nTry again\n";
+			std::cout << "------------------------------\n";
+			std::cout << "SPAM's keyword: [Enter all keywords | separated by 'SPACE'\n";
+			std::getline(std::cin, inputStr);
+		}
 		std::stringstream ss{ inputStr };
 		while (ss >> inputStr) keys.push_back(inputStr);
 		filterFile << "Spam:\t";

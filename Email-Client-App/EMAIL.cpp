@@ -201,16 +201,8 @@ bool EMAIL::input(const std::string& local) {
 }
 
 void SplitPath(const std::string& filePath, std::string& fileName, std::string& fileExtension) {
-	size_t lastSlash = filePath.find_last_of("/\\");
-	size_t lastDot = filePath.find_last_of(".");
-	if (lastDot != std::string::npos && lastDot > lastSlash) {
-		fileName = filePath.substr((lastSlash != std::string::npos) ? lastSlash + 1 : 0, lastDot - ((lastSlash != std::string::npos) ? lastSlash + 1 : 0));
-		fileExtension = filePath.substr(lastDot);
-	}
-	else {
-		fileName = (lastSlash != std::string::npos) ? filePath.substr(lastSlash + 1) : filePath;
-		fileExtension = filePath.substr(lastDot);
-	}
+	//"C:\Users\Nguyen Lan\Pictures\Screenshots\Screenshot 2023-07-03 203933.png"
+	fileName = filePath.substr(filePath.find_last_of('\\') + 1);
 }
 
 std::streampos getFileSize(const std::string& filePath) {
@@ -293,13 +285,10 @@ void EMAIL::outputF(const std::string& file) {
 
 
 void extractNameAndNumber(const std::string& input, std::string& name, int& number) {
-	std::string a = input.substr(input.find("=") + 1);
+	std::string a = input.substr(input.find("=") + 2);
 	std::stringstream ss{ a };
-	std::string _name, _extension;
-	std::getline(ss, _name, ',');
-	std::getline(ss, _extension, ',');
+	std::getline(ss, name, ',');
 	ss >> number;
-	name = _name + _extension;
 }
 
 bool copyFile(const std::string& sourcePath, const std::string& destinationPath) {
