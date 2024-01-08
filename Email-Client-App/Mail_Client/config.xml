@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config_user>
+	<localUser>22120199@mmt.com</localUser>
+	<password>123</password>
+	<ip>127.0.0.1</ip>
+	<smtp>2225</smtp>
+	<pop3>3335</pop3>
+	<autoload>10</autoload>
+</config_user>

@@ -235,12 +235,12 @@ bool EMAIL::inputF(const std::string& file) {
 	std::getline(fileOpen, temp);
 	std::stringstream ss2{ temp };
 	recvCC.resize(0);
-	while (std::getline(ss, temp)) recvCC.push_back(temp);
+	while (std::getline(ss2, temp,'\t')) recvCC.push_back(temp);
 
 	std::getline(fileOpen, temp);
 	std::stringstream ss3{ temp };
 	recvBCC.resize(0);
-	while (std::getline(ss3, temp)) recvBCC.push_back(temp);
+	while (std::getline(ss3, temp,'\t')) recvBCC.push_back(temp);
 
 	std::getline(fileOpen, subject);
 	int nLines = 0;

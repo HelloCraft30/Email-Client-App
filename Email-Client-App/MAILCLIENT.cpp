@@ -244,7 +244,9 @@ void MAILCLIENT::sendMail(EMAIL& mail) {
 	buffer = "To: ";
 	for (const auto& x : mail.recvTO) {
 		buffer += x + ", ";
-	} buffer.pop_back(); buffer.pop_back();
+	}
+	if (buffer != "To: ") buffer.pop_back();
+	buffer.pop_back();
 	buffer += "\n";
 	send(smtpSock, buffer.c_str(), buffer.size(), 0);
 
